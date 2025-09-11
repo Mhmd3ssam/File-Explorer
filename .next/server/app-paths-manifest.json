@@ -1,0 +1,10 @@
+{
+  "/page": "app/page.js",
+  "/(modules)/dashboard/page": "app/(modules)/dashboard/page.js",
+  "/(modules)/recent/page": "app/(modules)/recent/page.js",
+  "/(modules)/documents/page": "app/(modules)/documents/page.js",
+  "/(modules)/images/page": "app/(modules)/images/page.js",
+  "/(modules)/videos/page": "app/(modules)/videos/page.js",
+  "/(modules)/audios/page": "app/(modules)/audios/page.js",
+  "/(modules)/deleted/page": "app/(modules)/deleted/page.js"
+}
