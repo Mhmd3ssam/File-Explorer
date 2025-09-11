@@ -31,6 +31,7 @@ export function Sidebar() {
         <nav className="flex flex-col gap-1">
           <NavItem href="/dashboard" icon={<LayoutIcon />} label="Dashboard" />
           <NavItem href="/recent" icon={<ClockIcon />} label="Recent files" />
+          <NavItem href="/folders" icon={<FolderIcon />} label="Folders" />
           <NavItem href="/documents" icon={<DocIcon />} label="Documents" />
           <NavItem href="/images" icon={<ImageIcon />} label="Images" />
           <NavItem href="/videos" icon={<VideoIcon />} label="Videos" />
