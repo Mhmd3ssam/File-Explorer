@@ -19,7 +19,7 @@ export function FolderCard({ id, name, fileCount, size, href, onEdit, onDelete }
   const [showMenu, setShowMenu] = useState(false);
 
   return (
-    <div className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:cursor-pointer hover:border-blue-500 hover:border-2">
+    <div className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:cursor-pointer hover:border-blue-500 hover:border-2 w-full h-32">
       {/* Three dots menu */}
       <div className="absolute top-3 right-3">
         <button
@@ -58,7 +58,7 @@ export function FolderCard({ id, name, fileCount, size, href, onEdit, onDelete }
       </div>
 
       {/* Folder content */}
-      <Link href={href} className="block">
+      <Link href={href} className="block h-full">
         <div className="flex flex-col h-full">
           {/* Top section with icon and name */}
           <div className="flex items-start gap-3 mb-3">

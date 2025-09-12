@@ -12,9 +12,43 @@ export function FolderItemsClient({ nodes }: { nodes: AnyNode[] }) {
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null);
 
+  // Calculate file size for files (simulated)
+  const getFileSize = (fileName: string) => {
+    // Simulate file size based on name length
+    const sizeInBytes = fileName.length * 1024;
+    const formatSize = (bytes: number): string => {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+    return formatSize(sizeInBytes);
+  };
+
+  // Calculate folder size (simulated)
+  const getFolderSize = (folder: any) => {
+    const fileCount = (folder.children || []).filter((c: any) => c.type === 'file').length;
+    const totalSize = (folder.children || []).reduce((acc: number, child: any) => {
+      if (child.type === 'file') {
+        return acc + child.name.length * 1024; // Same calculation as getFileSize
+      }
+      return acc;
+    }, 0);
+    
+    const formatSize = (bytes: number): string => {
+      if (bytes === 0) return '0 B';
+      const k = 1024;
+      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    };
+    return formatSize(totalSize);
+  };
+
   return (
-    <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="space-y-4">
+      <div className="grid grid-cols-4 gap-6">
         {nodes.map((n: any) => (
           n.type === 'folder' ? (
             <FolderCard
@@ -22,13 +56,27 @@ export function FolderItemsClient({ nodes }: { nodes: AnyNode[] }) {
               id={n.id}
               name={n.name}
               fileCount={(n.children || []).filter((c: any) => c.type === 'file').length}
-              size=""
+              size={getFolderSize(n)}
               href={`/folders/folder/${n.id}`}
               onEdit={() => setEditingFolderId(n.id)}
               onDelete={() => setDeletingFolderId(n.id)}
             />
           ) : (
-            <FileCard key={n.id} name={n.name} kind={n.kind} />
+            <FileCard 
+              key={n.id} 
+              id={n.id}
+              name={n.name} 
+              kind={n.kind}
+              size={getFileSize(n.name)}
+              onEdit={() => {
+                // TODO: Implement file editing
+                console.log('Edit file:', n.name);
+              }}
+              onDelete={() => {
+                // TODO: Implement file deletion
+                console.log('Delete file:', n.name);
+              }}
+            />
           )
         ))}
       </div>
@@ -48,6 +96,6 @@ export function FolderItemsClient({ nodes }: { nodes: AnyNode[] }) {
           onOpenChange={(open) => !open && setDeletingFolderId(null)}
         />
       )}
-    </>
+    </div>
   );
 }

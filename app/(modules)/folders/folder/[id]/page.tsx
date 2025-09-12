@@ -19,9 +19,8 @@ export default function FoldersFolderPage({ params }: Props) {
 
   return (
     <div className="space-y-4">
-      <Breadcrumbs items={crumbs} />
       <div className="flex justify-between items-center">
-        <h1 className="text-xl font-bold">{folder.name}</h1>
+        <Breadcrumbs items={crumbs} />
         <div className="flex gap-2">
           <CreateFileButton parentId={folder.id} allowDestinationSelect={false} />
           <CreateFolderButton parentId={folder.id} />

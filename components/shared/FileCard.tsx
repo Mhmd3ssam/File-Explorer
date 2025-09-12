@@ -39,7 +39,7 @@ export function FileCard({ id, name, kind, size, onEdit, onDelete }: FileCardPro
   };
 
   return (
-    <div className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:cursor-pointer hover:border-blue-500 hover:border-2">
+    <div className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:cursor-pointer hover:border-blue-500 hover:border-2 w-full h-32">
       {/* Three dots menu */}
       <div className="absolute top-3 right-3">
         <button
