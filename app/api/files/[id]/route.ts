@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { findFolder } from '@/lib/data';
+import { findFolder, saveData } from '@/lib/data';
 import { writeFile, mkdir } from 'fs/promises';
 import { join, basename } from 'path';
 import { randomUUID } from 'crypto';
@@ -48,6 +48,7 @@ export async function POST(
     else if (mime.startsWith('audio/')) kind = 'audio';
     else if (mime === 'application/pdf') kind = 'document';
   }
+
   const publicDir = join(process.cwd(), 'public');
   const filePath = join(publicDir, safeName);
 
@@ -94,6 +95,9 @@ export async function POST(
       type: 'file',
       kind,
     });
+
+    // Save the updated structure to disk
+    saveData();
   } catch (err: any) {
     console.error('Unexpected failure while creating file:', err);
     return NextResponse.json({ error: 'Failed to create file' }, { status: 500 });
@@ -102,7 +106,10 @@ export async function POST(
   // Revalidate the correct paths
   revalidatePath('/dashboard');
   revalidatePath('/folders');
-  if (params.id !== 'root') {
+  if (params.id === 'root') {
+    // For root folder, revalidate the main folders page
+    revalidatePath('/folders');
+  } else {
     revalidatePath(`/dashboard/folder/${params.id}`);
     revalidatePath(`/folders/folder/${params.id}`);
   }

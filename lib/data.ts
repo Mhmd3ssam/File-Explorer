@@ -1,3 +1,6 @@
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
+import { join } from 'path';
+
 export type FileNode = {
   id: string;
   name: string;
@@ -12,15 +15,51 @@ export type FolderNode = {
   children: Array<FolderNode | FileNode>;
 };
 
-export const root: FolderNode = {
+// Default root structure
+const defaultRoot: FolderNode = {
   id: "root",
   name: "root",
   type: "folder",
-  children: [
-    { id: "folder-1", name: "Folder 1", type: "folder", children: [] },
-    { id: "folder-2", name: "Folder 2", type: "folder", children: [] },
-  ],
+  children: [],
 };
+
+// Data file path
+const DATA_FILE_PATH = join(process.cwd(), 'data', 'file-structure.json');
+
+// Load data synchronously on startup
+function loadData(): FolderNode {
+  try {
+    if (existsSync(DATA_FILE_PATH)) {
+      const data = readFileSync(DATA_FILE_PATH, 'utf-8');
+      const loaded = JSON.parse(data);
+      console.log('Loaded existing file structure from disk with', loaded.children.length, 'items');
+      console.log('Root children:', loaded.children.map(c => ({ name: c.name, type: c.type })));
+      return loaded;
+    } else {
+      console.log('No existing data file found, starting with empty structure');
+      return { ...defaultRoot };
+    }
+  } catch (error) {
+    console.error('Error loading data:', error);
+    return { ...defaultRoot };
+  }
+}
+
+// Initialize root with loaded data
+const root: FolderNode = loadData();
+
+// Save data to file
+function saveData(): void {
+  try {
+    mkdirSync(join(process.cwd(), 'data'), { recursive: true });
+    writeFileSync(DATA_FILE_PATH, JSON.stringify(root, null, 2));
+    console.log('Saved file structure to disk with', root.children.length, 'items');
+  } catch (error) {
+    console.error('Failed to save data:', error);
+  }
+}
+
+export { root };
 
 export function findFolder(
   id: string,
@@ -92,7 +131,6 @@ export function getFolderStats(folder: FolderNode): { fileCount: number; size: s
   };
 }
 
-
 export function getFolderPath(id: string): FolderNode[] {
   const path: FolderNode[] = [];
   function dfs(node: FolderNode): boolean {
@@ -106,13 +144,16 @@ export function getFolderPath(id: string): FolderNode[] {
     path.pop();
     return false;
   }
-  // TypeScript-friendly boolean literals will be fixed after write
   dfs(root as any);
   return path;
 }
 
 export function renameFolder(id: string, newName: string, current: FolderNode = root): boolean {
-  if (current.id === id) { current.name = newName; return true; }
+  if (current.id === id) { 
+    current.name = newName; 
+    saveData(); // Save after modification
+    return true; 
+  }
   for (const child of current.children) {
     if (child.type === 'folder') {
       if (renameFolder(id, newName, child)) return true;
@@ -125,9 +166,16 @@ export function deleteFolderById(id: string, current: FolderNode = root): boolea
   for (let i = 0; i < current.children.length; i++) {
     const child = current.children[i];
     if (child.type === 'folder') {
-      if (child.id === id) { current.children.splice(i, 1); return true; }
+      if (child.id === id) { 
+        current.children.splice(i, 1); 
+        saveData(); // Save after modification
+        return true; 
+      }
       if (deleteFolderById(id, child)) return true;
     }
   }
   return false;
 }
+
+// Export the save function so API routes can use it
+export { saveData };

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { findFolder, renameFolder, deleteFolderById } from '@/lib/data';
+import { findFolder, renameFolder, deleteFolderById, saveData } from '@/lib/data';
 import { randomUUID } from 'crypto';
 
 export async function GET(
@@ -29,6 +29,10 @@ export async function POST(
     type: 'folder',
     children: [],
   });
+  
+  // Save the updated structure to disk
+  saveData();
+  
   revalidatePath('/dashboard');
   revalidatePath('/folders');
   revalidatePath(`/dashboard/folder/${params.id}`);
@@ -42,6 +46,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   if (!trimmed) return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
   const ok = renameFolder(params.id, trimmed);
   if (!ok) return NextResponse.json({ error: 'Folder not found' }, { status: 404 });
+  
+  // Save the updated structure to disk
+  saveData();
+  
   revalidatePath('/dashboard');
   revalidatePath('/folders');
   revalidatePath(`/dashboard/folder/${params.id}`);
@@ -52,6 +60,10 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
 export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
   const ok = deleteFolderById(params.id);
   if (!ok) return NextResponse.json({ error: 'Folder not found' }, { status: 404 });
+  
+  // Save the updated structure to disk
+  saveData();
+  
   revalidatePath('/dashboard');
   revalidatePath('/folders');
   return NextResponse.json({ success: true });

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import type { FolderNode, FileNode } from '@/lib/data';
+import type { FolderNode, FileNode } from '@/lib/data-client';
 
 export function FolderList({ nodes }: { nodes: Array<FolderNode | FileNode> }) {
   if (!nodes.length) {

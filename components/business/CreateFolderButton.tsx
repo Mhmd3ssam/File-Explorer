@@ -65,9 +65,6 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
           <form onSubmit={handleSubmit}>
             <DialogHeader>
               <DialogTitle>Create New Folder</DialogTitle>
-              <DialogDescription>
-                Enter a name for your new folder.
-              </DialogDescription>
             </DialogHeader>
             
             <DialogContent>
@@ -83,7 +80,7 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
                     onBlur={() => setFocused(false)}
                     disabled={loading}
                     required
-                    className="peer pt-6 pb-2"
+                    className="peer pt-6 pb-4"
                   />
                   <label
                     htmlFor="folder-name"
@@ -126,9 +123,6 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
       <form onSubmit={handleSubmit}>
         <DialogHeader>
           <DialogTitle>Create New Folder</DialogTitle>
-          <DialogDescription>
-            Enter a name for your new folder.
-          </DialogDescription>
         </DialogHeader>
         
         <DialogContent>
@@ -144,7 +138,7 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
                 onBlur={() => setFocused(false)}
                 disabled={loading}
                 required
-                className="peer pt-6 pb-2"
+                className="peer pt-6 pb-4"
               />
               <label
                 htmlFor="folder-name"

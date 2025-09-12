@@ -1,22 +1,22 @@
 "use client";
 
 import { useState } from 'react';
-import { getAllFolders, findFolder } from '@/lib/data';
 import { FolderIcon } from '@/components/shared/icons';
 import { cn } from '@/lib/utils';
+import type { FolderNode } from '@/lib/data-client';
 
 interface FolderSelectorProps {
   selectedFolderId: string;
   onFolderChange: (folderId: string) => void;
   disabled?: boolean;
+  folders: FolderNode[];
 }
 
-export function FolderSelector({ selectedFolderId, onFolderChange, disabled }: FolderSelectorProps) {
+export function FolderSelector({ selectedFolderId, onFolderChange, disabled, folders }: FolderSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const folders = getAllFolders();
 
   const getDisplayName = (folderId: string) => {
-    const folder = findFolder(folderId);
+    const folder = folders.find(f => f.id === folderId);
     return folder ? folder.name : 'Select a folder';
   };
 

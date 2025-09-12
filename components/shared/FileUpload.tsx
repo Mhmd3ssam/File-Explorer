@@ -17,9 +17,6 @@ export function FileUpload({ onChange }: { onChange: (value: SelectedFile) => vo
     <div className="space-y-4">
       {/* File input */}
       <div className="flex items-center gap-2">
-        <label htmlFor={fileInputId} className="text-sm min-w-16">
-          File
-        </label>
         <Input
           id={fileInputId}
           type="file"

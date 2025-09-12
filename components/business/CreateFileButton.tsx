@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { FileUpload, type SelectedFile } from '@/components/shared/FileUpload';
 import { FolderSelector } from '@/components/shared/FolderSelector';
-import { getAllFolders } from '@/lib/data';
+import type { FolderNode } from '@/lib/data-client';
 
 interface CreateFileButtonProps {
   parentId: string;
@@ -20,11 +20,31 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
   const [selected, setSelected] = useState<SelectedFile>(null);
   const [selectedFolderId, setSelectedFolderId] = useState('');
   const [loading, setLoading] = useState(false);
+  const [folders, setFolders] = useState<FolderNode[]>([]);
   const router = useRouter();
 
   // Use external open state if provided, otherwise use internal state
   const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
   const setOpen = onOpenChange || setInternalOpen;
+
+  // Fetch folders when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      fetchFolders();
+    }
+  }, [isOpen]);
+
+  const fetchFolders = async () => {
+    try {
+      const response = await fetch('/api/folders');
+      if (response.ok) {
+        const foldersData = await response.json();
+        setFolders(foldersData);
+      }
+    } catch (error) {
+      console.error('Failed to fetch folders:', error);
+    }
+  };
 
   // Reset form when modal opens and set default folder
   useEffect(() => {
@@ -35,7 +55,6 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
         // Always current folder
         setSelectedFolderId(parentId);
       } else {
-        const folders = getAllFolders();
         if (parentId !== 'root' && folders.some((f) => f.id === parentId)) {
           setSelectedFolderId(parentId);
         } else if (folders.length > 0) {
@@ -45,10 +64,10 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
         }
       }
     }
-  }, [isOpen, parentId, allowDestinationSelect]);
+  }, [isOpen, parentId, allowDestinationSelect, folders]);
 
   const handleCreate = async () => {
-    if (!selected || loading || (!selectedFolderId && allowDestinationSelect)) return;
+    if (!selected || loading) return;
 
     setLoading(true);
     try {
@@ -56,7 +75,9 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
       form.append('file', selected.file);
       if (selected.name) form.append('name', selected.name);
 
-      const response = await fetch(`/api/files/${allowDestinationSelect ? selectedFolderId : parentId}`, {
+      const targetFolderId = allowDestinationSelect ? selectedFolderId : parentId;
+      if (!targetFolderId) return;
+      const response = await fetch(`/api/files/${targetFolderId}`, {
         method: 'POST',
         body: form,
       });
@@ -78,7 +99,6 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
     }
   };
 
-  const folders = getAllFolders();
   const canUpload = !!selected && (allowDestinationSelect ? selectedFolderId && folders.length > 0 : true);
 
   // If no external control, render as button + modal
@@ -91,9 +111,6 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
         <Dialog open={isOpen} onOpenChange={setOpen}>
           <DialogHeader>
             <DialogTitle>Upload New File</DialogTitle>
-            <DialogDescription>
-              {allowDestinationSelect ? 'Select a file and choose the destination folder.' : 'Select a file to upload to this folder.'}
-            </DialogDescription>
           </DialogHeader>
           
           <DialogContent>
@@ -105,6 +122,7 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
                     selectedFolderId={selectedFolderId}
                     onFolderChange={setSelectedFolderId}
                     disabled={loading}
+                    folders={folders}
                   />
                 ) : (
                   <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
@@ -169,6 +187,7 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
                 selectedFolderId={selectedFolderId}
                 onFolderChange={setSelectedFolderId}
                 disabled={loading}
+                folders={folders}
               />
             ) : (
               <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">

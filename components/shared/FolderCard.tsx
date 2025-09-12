@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { FolderIcon } from '@/components/shared/icons';
 import { cn } from '@/lib/utils';
+import { FolderIcon } from '@/components/shared/icons';
 
 interface FolderCardProps {
   id: string;
@@ -19,12 +19,12 @@ export function FolderCard({ id, name, fileCount, size, href, onEdit, onDelete }
   const [showMenu, setShowMenu] = useState(false);
 
   return (
-    <div className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:cursor-pointer hover:border-blue-500 hover:border-2">
       {/* Three dots menu */}
       <div className="absolute top-3 right-3">
         <button
           onClick={() => setShowMenu(!showMenu)}
-          className="p-1 rounded-full hover:bg-gray-100 opacity-0 group-hover:opacity-100 transition-opacity"
+          className="p-1 rounded-full hover:bg-gray-100 opacity-0 group-hover:opacity-100"
         >
           <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
@@ -59,22 +59,29 @@ export function FolderCard({ id, name, fileCount, size, href, onEdit, onDelete }
 
       {/* Folder content */}
       <Link href={href} className="block">
-        <div className="flex items-start gap-3">
-          {/* Folder icon in circle */}
-          <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0">
-            <FolderIcon size={24} className="text-black" />
+        <div className="flex flex-col h-full">
+          {/* Top section with icon and name */}
+          <div className="flex items-start gap-3 mb-3">
+            {/* Folder icon with circular background and hover effect */}
+            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 hover:bg-blue-50 hover:cursor-pointer">
+              <FolderIcon size={16} className="text-gray-600 group-hover:text-blue-600" />
+            </div>
+            
+            {/* Folder name */}
+            <div className="flex-1 min-w-0">
+              <h3 className="font-semibold text-gray-900 text-base line-clamp-2 group-hover:text-blue-600">
+                {name}
+              </h3>
+            </div>
           </div>
           
-          {/* Folder info */}
-          <div className="flex-1 min-w-0">
-            {/* Folder name */}
-            <h3 className="font-semibold text-gray-900 text-base mb-1 line-clamp-2">
-              {name}
-            </h3>
-            
-            {/* File count and size */}
-            <div className="text-sm text-gray-500">
-              {fileCount} files • {size}
+          {/* Bottom section with file count (left) and folder size (right) */}
+          <div className="mt-auto flex justify-between items-center">
+            <div className="text-xs text-gray-500 group-hover:text-blue-500">
+              {fileCount} files
+            </div>
+            <div className="text-xs text-gray-500 group-hover:text-blue-500">
+              {size}
             </div>
           </div>
         </div>
