@@ -29,6 +29,7 @@ export async function POST(
     children: [],
   });
   revalidatePath('/dashboard');
+  revalidatePath('/folders');
   revalidatePath(`/dashboard/folder/${params.id}`);
   return NextResponse.json({ success: true });
 } 

@@ -90,3 +90,22 @@ export function getFolderStats(folder: FolderNode): { fileCount: number; size: s
     size: formatSize(totalSize)
   };
 }
+
+
+export function getFolderPath(id: string): FolderNode[] {
+  const path: FolderNode[] = [];
+  function dfs(node: FolderNode): boolean {
+    path.push(node);
+    if (node.id == id) return true;
+    for (const child of node.children) {
+      if (child.type === 'folder') {
+        if (dfs(child)) return true;
+      }
+    }
+    path.pop();
+    return false;
+  }
+  // TypeScript-friendly boolean literals will be fixed after write
+  dfs(root as any);
+  return path;
+}

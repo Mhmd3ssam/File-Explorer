@@ -12,9 +12,10 @@ interface CreateFileButtonProps {
   parentId: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  allowDestinationSelect?: boolean; // if false, uploads to parentId without showing folder selector
 }
 
-export function CreateFileButton({ parentId, open: externalOpen, onOpenChange }: CreateFileButtonProps) {
+export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, allowDestinationSelect = true }: CreateFileButtonProps) {
   const [internalOpen, setInternalOpen] = useState(false);
   const [selected, setSelected] = useState<SelectedFile>(null);
   const [selectedFolderId, setSelectedFolderId] = useState('');
@@ -30,25 +31,24 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange }:
     if (isOpen) {
       setSelected(null);
       setLoading(false);
-      
-      // Set default folder to first available folder or parentId if it's not root
-      const folders = getAllFolders();
-      if (parentId !== 'root' && folders.some(f => f.id === parentId)) {
+      if (!allowDestinationSelect) {
+        // Always current folder
         setSelectedFolderId(parentId);
-      } else if (folders.length > 0) {
-        setSelectedFolderId(folders[0].id);
       } else {
-        setSelectedFolderId('');
+        const folders = getAllFolders();
+        if (parentId !== 'root' && folders.some((f) => f.id === parentId)) {
+          setSelectedFolderId(parentId);
+        } else if (folders.length > 0) {
+          setSelectedFolderId(folders[0].id);
+        } else {
+          setSelectedFolderId('');
+        }
       }
     }
-  }, [isOpen, parentId]);
+  }, [isOpen, parentId, allowDestinationSelect]);
 
   const handleCreate = async () => {
-    if (!selected || loading || !selectedFolderId) return;
-
-    console.log('Uploading file to folder:', selectedFolderId);
-    console.log('File:', selected.file.name);
-    console.log('Custom name:', selected.name);
+    if (!selected || loading || (!selectedFolderId && allowDestinationSelect)) return;
 
     setLoading(true);
     try {
@@ -56,21 +56,18 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange }:
       form.append('file', selected.file);
       if (selected.name) form.append('name', selected.name);
 
-      const response = await fetch(`/api/files/${selectedFolderId}`, {
+      const response = await fetch(`/api/files/${allowDestinationSelect ? selectedFolderId : parentId}`, {
         method: 'POST',
         body: form,
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error('Upload failed:', errorData);
         alert(`Upload failed: ${errorData.error || 'Unknown error'}`);
         return;
       }
 
-      const result = await response.json();
-      console.log('Upload successful:', result);
-      
+      await response.json();
       router.refresh();
       setOpen(false);
     } catch (error) {
@@ -82,7 +79,7 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange }:
   };
 
   const folders = getAllFolders();
-  const canUpload = selected && selectedFolderId && folders.length > 0;
+  const canUpload = !!selected && (allowDestinationSelect ? selectedFolderId && folders.length > 0 : true);
 
   // If no external control, render as button + modal
   if (externalOpen === undefined) {
@@ -95,25 +92,25 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange }:
           <DialogHeader>
             <DialogTitle>Upload New File</DialogTitle>
             <DialogDescription>
-              Select a file and choose the destination folder.
+              {allowDestinationSelect ? 'Select a file and choose the destination folder.' : 'Select a file to upload to this folder.'}
             </DialogDescription>
           </DialogHeader>
           
           <DialogContent>
             <div className="space-y-4">
               <FileUpload onChange={setSelected} />
-              {folders.length > 0 ? (
-                <FolderSelector
-                  selectedFolderId={selectedFolderId}
-                  onFolderChange={setSelectedFolderId}
-                  disabled={loading}
-                />
-              ) : (
-                <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-                  <p className="text-sm text-yellow-800">
-                    No folders available. Please create a folder first.
-                  </p>
-                </div>
+              {allowDestinationSelect && (
+                folders.length > 0 ? (
+                  <FolderSelector
+                    selectedFolderId={selectedFolderId}
+                    onFolderChange={setSelectedFolderId}
+                    disabled={loading}
+                  />
+                ) : (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                    <p className="text-sm text-yellow-800">No folders available. Please create a folder first.</p>
+                  </div>
+                )
               )}
               {selected && (
                 <div className="p-3 bg-gray-50 rounded-md">
@@ -123,9 +120,9 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange }:
                       <span> (will be saved as: {selected.name})</span>
                     )}
                   </p>
-                  {selectedFolderId && (
+                  {allowDestinationSelect && selectedFolderId && (
                     <p className="text-sm text-gray-600 mt-1">
-                      <span className="font-medium">Destination:</span> {folders.find(f => f.id === selectedFolderId)?.name || 'Unknown folder'}
+                      <span className="font-medium">Destination:</span> {folders.find((f) => f.id === selectedFolderId)?.name || 'Unknown folder'}
                     </p>
                   )}
                 </div>
@@ -159,25 +156,25 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange }:
       <DialogHeader>
         <DialogTitle>Upload New File</DialogTitle>
         <DialogDescription>
-          Select a file and choose the destination folder.
+          {allowDestinationSelect ? 'Select a file and choose the destination folder.' : 'Select a file to upload to this folder.'}
         </DialogDescription>
       </DialogHeader>
       
       <DialogContent>
         <div className="space-y-4">
           <FileUpload onChange={setSelected} />
-          {folders.length > 0 ? (
-            <FolderSelector
-              selectedFolderId={selectedFolderId}
-              onFolderChange={setSelectedFolderId}
-              disabled={loading}
-            />
-          ) : (
-            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
-              <p className="text-sm text-yellow-800">
-                No folders available. Please create a folder first.
-              </p>
-            </div>
+          {allowDestinationSelect && (
+            folders.length > 0 ? (
+              <FolderSelector
+                selectedFolderId={selectedFolderId}
+                onFolderChange={setSelectedFolderId}
+                disabled={loading}
+              />
+            ) : (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md">
+                <p className="text-sm text-yellow-800">No folders available. Please create a folder first.</p>
+              </div>
+            )
           )}
           {selected && (
             <div className="p-3 bg-gray-50 rounded-md">
@@ -187,9 +184,9 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange }:
                   <span> (will be saved as: {selected.name})</span>
                 )}
               </p>
-              {selectedFolderId && (
+              {allowDestinationSelect && selectedFolderId && (
                 <p className="text-sm text-gray-600 mt-1">
-                  <span className="font-medium">Destination:</span> {folders.find(f => f.id === selectedFolderId)?.name || 'Unknown folder'}
+                  <span className="font-medium">Destination:</span> {folders.find((f) => f.id === selectedFolderId)?.name || 'Unknown folder'}
                 </p>
               )}
             </div>

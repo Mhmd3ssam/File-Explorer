@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface CreateFolderButtonProps {
   parentId?: string;
@@ -16,6 +17,7 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
   const [internalOpen, setInternalOpen] = useState(false);
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [focused, setFocused] = useState(false);
   const router = useRouter();
 
   // Use external open state if provided, otherwise use internal state
@@ -27,6 +29,7 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
     if (isOpen) {
       setName('');
       setLoading(false);
+      setFocused(false);
     }
   }, [isOpen]);
 
@@ -69,19 +72,28 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
             
             <DialogContent>
               <div className="space-y-4">
-                <div>
-                  <label htmlFor="folder-name" className="block text-sm font-medium text-gray-700 mb-2">
-                    Folder Name
-                  </label>
+                <div className="relative">
                   <Input
                     id="folder-name"
                     autoFocus
-                    placeholder="Enter folder name"
+                    placeholder=" "
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
                     disabled={loading}
                     required
+                    className="peer pt-6 pb-2"
                   />
+                  <label
+                    htmlFor="folder-name"
+                    className={cn(
+                      "absolute left-3 transition-all duration-200 pointer-events-none",
+                      focused || name ? "top-2 text-xs text-gray-500" : "top-1/2 -translate-y-1/2 text-gray-400"
+                    )}
+                  >
+                    Folder Name
+                  </label>
                 </div>
               </div>
             </DialogContent>
@@ -121,19 +133,28 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
         
         <DialogContent>
           <div className="space-y-4">
-            <div>
-              <label htmlFor="folder-name" className="block text-sm font-medium text-gray-700 mb-2">
-                Folder Name
-              </label>
+            <div className="relative">
               <Input
                 id="folder-name"
                 autoFocus
-                placeholder="Enter folder name"
+                placeholder=" "
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
                 disabled={loading}
                 required
+                className="peer pt-6 pb-2"
               />
+              <label
+                htmlFor="folder-name"
+                className={cn(
+                  "absolute left-3 transition-all duration-200 pointer-events-none",
+                  focused || name ? "top-2 text-xs text-gray-500" : "top-1/2 -translate-y-1/2 text-gray-400"
+                )}
+              >
+                Folder Name
+              </label>
             </div>
           </div>
         </DialogContent>

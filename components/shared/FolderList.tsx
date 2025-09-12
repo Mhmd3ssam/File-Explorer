@@ -13,7 +13,7 @@ export function FolderList({ nodes }: { nodes: Array<FolderNode | FileNode> }) {
           return (
             <li key={node.id}>
               <Link
-                href={`/dashboard/folder/${node.id}`}
+                href={`/folders/folder/${node.id}`}
                 className="block border p-2 rounded bg-white hover:bg-gray-50"
               >
                 {node.name}
