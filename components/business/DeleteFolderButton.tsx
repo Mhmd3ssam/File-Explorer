@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { findFolder } from '@/lib/data';
 
 interface DeleteFolderButtonProps {
   folderId: string;
@@ -36,11 +35,8 @@ export function DeleteFolderButton({ folderId, folderName, open: externalOpen, o
     try {
       // For now, we'll just update the in-memory data
       // In a real app, this would be an API call
-      const root = findFolder('root');
-      if (root) {
-        root.children = root.children.filter(child => child.id !== folderId);
-      }
-      
+      const res = await fetch(`/api/folders/${folderId}`, { method: 'DELETE' });
+      if (!res.ok) { throw new Error('Failed'); }
       router.refresh();
       setOpen(false);
     } catch (error) {

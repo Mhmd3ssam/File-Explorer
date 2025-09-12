@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { findFolder } from '@/lib/data';
 import { cn } from '@/lib/utils';
 
 interface EditFolderButtonProps {
@@ -28,10 +27,10 @@ export function EditFolderButton({ folderId, open: externalOpen, onOpenChange }:
   // Load folder data when modal opens
   useEffect(() => {
     if (isOpen) {
-      const folder = findFolder(folderId);
-      if (folder) {
-        setName(folder.name);
-      }
+      fetch(`/api/folders/${folderId}`)
+        .then((r) => r.json())
+        .then((data) => setName(data?.name || ''))
+        .catch(() => setName(''));
       setLoading(false);
       setFocused(false);
     }
@@ -44,13 +43,8 @@ export function EditFolderButton({ folderId, open: externalOpen, onOpenChange }:
 
     setLoading(true);
     try {
-      // For now, we'll just update the in-memory data
-      // In a real app, this would be an API call
-      const folder = findFolder(folderId);
-      if (folder) {
-        folder.name = trimmed;
-      }
-      
+      const res = await fetch(`/api/folders/${folderId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: trimmed }) });
+      if (!res.ok) { throw new Error('Failed'); }
       router.refresh();
       setOpen(false);
     } catch (error) {

@@ -1,7 +1,7 @@
 import { findFolder, getFolderPath } from '@/lib/data';
 import { CreateFolderButton } from '@/components/business/CreateFolderButton';
 import { CreateFileButton } from '@/components/business/CreateFileButton';
-import { FolderList } from '@/components/shared/FolderList';
+import { FolderItemsClient } from '@/components/business/FolderItemsClient';
 import { Breadcrumbs, type Crumb } from '@/components/shared/Breadcrumbs';
 
 interface Props { params: { id: string } }
@@ -27,7 +27,7 @@ export default function FoldersFolderPage({ params }: Props) {
           <CreateFolderButton parentId={folder.id} />
         </div>
       </div>
-      <FolderList nodes={folder.children} />
+      <FolderItemsClient nodes={folder.children as any} />
     </div>
   );
 }

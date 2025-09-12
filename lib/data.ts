@@ -2,6 +2,7 @@ export type FileNode = {
   id: string;
   name: string;
   type: "file";
+  kind?: "document" | "image" | "video" | "audio" | "unknown";
 };
 
 export type FolderNode = {
@@ -108,4 +109,25 @@ export function getFolderPath(id: string): FolderNode[] {
   // TypeScript-friendly boolean literals will be fixed after write
   dfs(root as any);
   return path;
+}
+
+export function renameFolder(id: string, newName: string, current: FolderNode = root): boolean {
+  if (current.id === id) { current.name = newName; return true; }
+  for (const child of current.children) {
+    if (child.type === 'folder') {
+      if (renameFolder(id, newName, child)) return true;
+    }
+  }
+  return false;
+}
+
+export function deleteFolderById(id: string, current: FolderNode = root): boolean {
+  for (let i = 0; i < current.children.length; i++) {
+    const child = current.children[i];
+    if (child.type === 'folder') {
+      if (child.id === id) { current.children.splice(i, 1); return true; }
+      if (deleteFolderById(id, child)) return true;
+    }
+  }
+  return false;
 }
