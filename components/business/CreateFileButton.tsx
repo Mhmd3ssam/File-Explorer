@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileUpload, type SelectedFile } from '@/components/shared/FileUpload';
 import { FolderSelector } from '@/components/shared/FolderSelector';
 import type { FolderNode } from '@/lib/data-client';
@@ -105,16 +106,22 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
   if (externalOpen === undefined) {
     return (
       <>
-        <Button onClick={() => setOpen(true)} variant="outline" size="md">
-          + File
-        </Button>
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ duration: 0.1 }}
+        >
+          <Button onClick={() => setOpen(true)} variant="outline" size="md">
+            + File
+          </Button>
+        </motion.div>
         <Dialog open={isOpen} onOpenChange={setOpen}>
-          <DialogHeader>
-            <DialogTitle>Upload New File</DialogTitle>
-          </DialogHeader>
-          
           <DialogContent>
-            <div className="space-y-4">
+            <DialogHeader>
+              <DialogTitle>Upload New File</DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
               <FileUpload onChange={setSelected} />
               {allowDestinationSelect && (
                 folders.length > 0 ? (
@@ -146,23 +153,35 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
                 </div>
               )}
             </div>
+            
+            <DialogFooter>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.1 }}
+              >
+                <Button 
+                  variant="outline" 
+                  onClick={() => setOpen(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.1 }}
+              >
+                <Button 
+                  onClick={handleCreate} 
+                  disabled={!canUpload || loading}
+                >
+                  {loading ? 'Uploading...' : 'Upload File'}
+                </Button>
+              </motion.div>
+            </DialogFooter>
           </DialogContent>
-          
-          <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setOpen(false)}
-              disabled={loading}
-            >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleCreate} 
-              disabled={!canUpload || loading}
-            >
-              {loading ? 'Uploading...' : 'Upload File'}
-            </Button>
-          </DialogFooter>
         </Dialog>
       </>
     );
@@ -171,15 +190,12 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
   // If external control, render only modal
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
-      <DialogHeader>
-        <DialogTitle>Upload New File</DialogTitle>
-        <DialogDescription>
-          {allowDestinationSelect ? 'Select a file and choose the destination folder.' : 'Select a file to upload to this folder.'}
-        </DialogDescription>
-      </DialogHeader>
-      
       <DialogContent>
-        <div className="space-y-4">
+        <DialogHeader>
+          <DialogTitle>Upload New File</DialogTitle>
+        </DialogHeader>
+        
+        <div className="space-y-6">
           <FileUpload onChange={setSelected} />
           {allowDestinationSelect && (
             folders.length > 0 ? (
@@ -211,23 +227,35 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
             </div>
           )}
         </div>
+        
+        <DialogFooter>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.1 }}
+          >
+            <Button 
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.1 }}
+          >
+            <Button 
+              onClick={handleCreate} 
+              disabled={!canUpload || loading}
+            >
+              {loading ? 'Uploading...' : 'Upload File'}
+            </Button>
+          </motion.div>
+        </DialogFooter>
       </DialogContent>
-      
-      <DialogFooter>
-        <Button 
-          variant="outline" 
-          onClick={() => setOpen(false)}
-          disabled={loading}
-        >
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleCreate} 
-          disabled={!canUpload || loading}
-        >
-          {loading ? 'Uploading...' : 'Upload File'}
-        </Button>
-      </DialogFooter>
     </Dialog>
   );
 }

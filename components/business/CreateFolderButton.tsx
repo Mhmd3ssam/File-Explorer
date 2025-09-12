@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 interface CreateFolderButtonProps {
@@ -49,8 +50,15 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
       setOpen(false);
     } catch (error) {
       console.error('Failed to create folder:', error);
+      alert(`Failed to create folder: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSubmit(e);
     }
   };
 
@@ -58,60 +66,68 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
   if (externalOpen === undefined) {
     return (
       <>
-        <Button onClick={() => setOpen(true)} variant="outline" size="md">
-          + Folder
-        </Button>
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          transition={{ duration: 0.1 }}
+        >
+          <Button onClick={() => setOpen(true)} variant="outline" size="md">
+            + Folder
+          </Button>
+        </motion.div>
         <Dialog open={isOpen} onOpenChange={setOpen}>
-          <form onSubmit={handleSubmit}>
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Create New Folder</DialogTitle>
             </DialogHeader>
             
-            <DialogContent>
-              <div className="space-y-4">
-                <div className="relative">
-                  <Input
-                    id="folder-name"
-                    autoFocus
-                    placeholder=" "
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    onFocus={() => setFocused(true)}
-                    onBlur={() => setFocused(false)}
-                    disabled={loading}
-                    required
-                    className="peer pt-6 pb-4"
-                  />
-                  <label
-                    htmlFor="folder-name"
-                    className={cn(
-                      "absolute left-3 transition-all duration-200 pointer-events-none",
-                      focused || name ? "top-2 text-xs text-gray-500" : "top-1/2 -translate-y-1/2 text-gray-400"
-                    )}
-                  >
-                    Folder Name
-                  </label>
-                </div>
-              </div>
-            </DialogContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <Input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
+                placeholder="Folder name"
+                disabled={loading}
+                className={cn(
+                  'transition-all duration-200',
+                  focused && 'ring-2 ring-blue-500 ring-opacity-50'
+                )}
+                autoFocus
+              />
+            </form>
             
             <DialogFooter>
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => setOpen(false)}
-                disabled={loading}
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.1 }}
               >
-                Cancel
-              </Button>
-              <Button 
-                type="submit" 
-                disabled={!name.trim() || loading}
+                <Button 
+                  type="button"
+                  variant="outline" 
+                  onClick={() => setOpen(false)}
+                  disabled={loading}
+                >
+                  Cancel
+                </Button>
+              </motion.div>
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ duration: 0.1 }}
               >
-                {loading ? 'Creating...' : 'Create Folder'}
-              </Button>
+                <Button 
+                  type="submit"
+                  onClick={handleSubmit}
+                  disabled={!name.trim() || loading}
+                >
+                  {loading ? 'Creating...' : 'Create Folder'}
+                </Button>
+              </motion.div>
             </DialogFooter>
-          </form>
+          </DialogContent>
         </Dialog>
       </>
     );
@@ -120,56 +136,58 @@ export function CreateFolderButton({ parentId = 'root', open: externalOpen, onOp
   // If external control, render only modal
   return (
     <Dialog open={isOpen} onOpenChange={setOpen}>
-      <form onSubmit={handleSubmit}>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>Create New Folder</DialogTitle>
         </DialogHeader>
         
-        <DialogContent>
-          <div className="space-y-4">
-            <div className="relative">
-              <Input
-                id="folder-name"
-                autoFocus
-                placeholder=" "
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
-                disabled={loading}
-                required
-                className="peer pt-6 pb-4"
-              />
-              <label
-                htmlFor="folder-name"
-                className={cn(
-                  "absolute left-3 transition-all duration-200 pointer-events-none",
-                  focused || name ? "top-2 text-xs text-gray-500" : "top-1/2 -translate-y-1/2 text-gray-400"
-                )}
-              >
-                Folder Name
-              </label>
-            </div>
-          </div>
-        </DialogContent>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <Input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onKeyDown={handleKeyDown}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            placeholder="Folder name"
+            disabled={loading}
+            className={cn(
+              'transition-all duration-200',
+              focused && 'ring-2 ring-blue-500 ring-opacity-50'
+            )}
+            autoFocus
+          />
+        </form>
         
         <DialogFooter>
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={() => setOpen(false)}
-            disabled={loading}
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.1 }}
           >
-            Cancel
-          </Button>
-          <Button 
-            type="submit" 
-            disabled={!name.trim() || loading}
+            <Button 
+              type="button"
+              variant="outline" 
+              onClick={() => setOpen(false)}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+          </motion.div>
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            transition={{ duration: 0.1 }}
           >
-            {loading ? 'Creating...' : 'Create Folder'}
-          </Button>
+            <Button 
+              type="submit"
+              onClick={handleSubmit}
+              disabled={!name.trim() || loading}
+            >
+              {loading ? 'Creating...' : 'Create Folder'}
+            </Button>
+          </motion.div>
         </DialogFooter>
-      </form>
+      </DialogContent>
     </Dialog>
   );
 }
