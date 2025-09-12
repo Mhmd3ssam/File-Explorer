@@ -14,6 +14,9 @@ export async function POST(
   const file = formData.get('file') as File | null;
   const providedName = formData.get('name')?.toString();
   const parent = findFolder(params.id);
+  
+  console.log('Creating file in folder:', params.id, 'Parent found:', !!parent);
+  
   if (!parent || !file) {
     return NextResponse.json({ error: 'Invalid request: missing parent or file' }, { status: 400 });
   }
@@ -46,7 +49,13 @@ export async function POST(
     name: safeName,
     type: 'file',
   });
-  revalidatePath('/');
-  revalidatePath(`/folder/${params.id}`);
+  
+  // Revalidate the correct paths
+  revalidatePath('/dashboard');
+  revalidatePath('/folders');
+  if (params.id !== 'root') {
+    revalidatePath(`/dashboard/folder/${params.id}`);
+  }
+  
   return NextResponse.json({ success: true });
 }

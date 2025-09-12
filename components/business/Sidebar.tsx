@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FolderIcon, LayoutIcon, ClockIcon, DocIcon, ImageIcon, VideoIcon, AudioIcon, TrashIcon } from '@/components/shared/icons';
+import { FolderIcon, LayoutIcon, DocIcon, ImageIcon, VideoIcon, AudioIcon, TrashIcon } from '@/components/shared/icons';
 
 const base = 'flex items-center gap-2 rounded-md px-3 py-2 text-sm';
 const passive = 'text-gray-700 hover:bg-gray-200/60';
@@ -30,7 +30,6 @@ export function Sidebar() {
         <div className="text-xs uppercase tracking-wide text-gray-500 mb-2">Menu</div>
         <nav className="flex flex-col gap-1">
           <NavItem href="/dashboard" icon={<LayoutIcon />} label="Dashboard" />
-          <NavItem href="/recent" icon={<ClockIcon />} label="Recent files" />
           <NavItem href="/folders" icon={<FolderIcon />} label="Folders" />
           <NavItem href="/documents" icon={<DocIcon />} label="Documents" />
           <NavItem href="/images" icon={<ImageIcon />} label="Images" />

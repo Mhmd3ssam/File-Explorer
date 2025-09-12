@@ -34,3 +34,59 @@ export function findFolder(
   }
   return null;
 }
+
+export function getAllFolders(current: FolderNode = root): FolderNode[] {
+  const folders: FolderNode[] = [];
+  
+  function traverse(node: FolderNode, path: string = '') {
+    if (node.id !== 'root') {
+      folders.push({
+        ...node,
+        name: path ? `${path}/${node.name}` : node.name
+      });
+    }
+    
+    for (const child of node.children) {
+      if (child.type === 'folder') {
+        const newPath = path ? `${path}/${node.name}` : node.name;
+        traverse(child, newPath);
+      }
+    }
+  }
+  
+  traverse(current);
+  return folders;
+}
+
+export function getFolderStats(folder: FolderNode): { fileCount: number; size: string } {
+  let fileCount = 0;
+  let totalSize = 0; // In bytes (simulated)
+  
+  function traverse(node: FolderNode | FileNode) {
+    if (node.type === 'file') {
+      fileCount++;
+      // Simulate file size based on name length and type
+      totalSize += node.name.length * 1024; // 1KB per character as simulation
+    } else {
+      for (const child of node.children) {
+        traverse(child);
+      }
+    }
+  }
+  
+  traverse(folder);
+  
+  // Format size
+  const formatSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  };
+  
+  return {
+    fileCount,
+    size: formatSize(totalSize)
+  };
+}
