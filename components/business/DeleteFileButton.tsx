@@ -79,7 +79,8 @@ export function DeleteFileButton({ fileId, fileName, open: externalOpen, onOpenC
           <Button 
             onClick={handleDelete}
             disabled={loading}
-            className="bg-red-600 hover:bg-red-700 text-white"
+            className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
+            style={{ backgroundColor: '#dc2626' }}
           >
             {loading ? 'Deleting...' : 'Delete File'}
           </Button>

@@ -36,6 +36,9 @@ export function FolderItemsClient({ nodes }: { nodes: AnyNode[] }) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  // Determine if an item is in the first row (first 4 items)
+  const isFirstRow = (index: number) => index < 4;
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-6">
@@ -51,6 +54,7 @@ export function FolderItemsClient({ nodes }: { nodes: AnyNode[] }) {
               onEdit={() => setEditingFolderId(n.id)}
               onDelete={() => setDeletingFolderId(n.id)}
               isLastItem={index === nodes.length - 1}
+              isFirstRow={isFirstRow(index)}
             />
           ) : (
             <FileCard 
@@ -58,10 +62,11 @@ export function FolderItemsClient({ nodes }: { nodes: AnyNode[] }) {
               id={n.id}
               name={n.name} 
               kind={n.kind}
-              size={getFileSize(n.name)}
+              size={formatSize(getFileSize(n.name))}
               onEdit={() => setEditingFileId(n.id)}
               onDelete={() => setDeletingFileId(n.id)}
               isLastItem={index === nodes.length - 1}
+              isFirstRow={isFirstRow(index)}
             />
           )
         ))}

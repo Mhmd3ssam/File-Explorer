@@ -4,12 +4,17 @@ import { useState, useEffect, useRef } from 'react';
 import { Table, type TableRow } from '@/components/shared/Table';
 import { DocIcon, ImageIcon, VideoIcon, AudioIcon, FileIcon } from '@/components/shared/icons';
 import { PieChart } from '@/components/shared/PieChart';
+import { AnimatedEmptyState } from '@/components/shared/AnimatedEmptyState';
+import { EditFileButton } from '@/components/business/EditFileButton';
+import { DeleteFileButton } from '@/components/business/DeleteFileButton';
 import type { FileNode } from '@/lib/data-client';
 
 export default function DashboardPage() {
   const [allFiles, setAllFiles] = useState<FileNode[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [showActionsMenu, setShowActionsMenu] = useState<string | null>(null);
+  const [editingFileId, setEditingFileId] = useState<string | null>(null);
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const filesPerPage = 5;
   const maxNameLength = 30;
@@ -22,7 +27,9 @@ export default function DashboardPage() {
         const response = await fetch('/api/files');
         if (response.ok) {
           const files = await response.json();
-          setAllFiles(files);
+          // Filter out files without IDs
+          const validFiles = files.filter((file: any) => file.id && file.name);
+          setAllFiles(validFiles);
         }
       } catch (error) {
         console.error('Failed to fetch files:', error);
@@ -47,31 +54,9 @@ export default function DashboardPage() {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
-  
-  // Calculate file statistics
-  const fileStats = {
-    total: allFiles.length,
-    images: allFiles.filter(f => f.kind === 'image').length,
-    videos: allFiles.filter(f => f.kind === 'video').length,
-    audios: allFiles.filter(f => f.kind === 'audio').length,
-    documents: allFiles.filter(f => f.kind === 'document').length,
-    others: allFiles.filter(f => !f.kind || f.kind === 'unknown').length,
-  };
-
-  // Get last 3 modified files (sorted by lastUpdated)
-  const lastModifiedFiles = allFiles
-    .sort((a, b) => new Date(b.lastUpdated || b.uploadedAt || '').getTime() - new Date(a.lastUpdated || a.uploadedAt || '').getTime())
-    .slice(0, 3);
-  
-  // Calculate pagination
-  const totalFiles = allFiles.length;
-  const totalPages = Math.ceil(totalFiles / filesPerPage);
-  const startIndex = currentPage * filesPerPage;
-  const endIndex = startIndex + filesPerPage;
-  const currentFiles = allFiles.slice(startIndex, endIndex);
 
   // Get file icon based on file type
-  const getFileIcon = (kind?: string, size: number = 16) => {
+  const getFileIcon = (kind?: string, size: number = 24) => {
     switch (kind) {
       case 'image':
         return <ImageIcon size={size} className="text-gray-600" />;
@@ -135,9 +120,44 @@ export default function DashboardPage() {
 
   // Handle actions
   const handleAction = (action: string, fileId: string) => {
-    console.log(`${action} file:`, fileId);
     setShowActionsMenu(null);
-    // TODO: Implement actual actions
+    
+    // Validate file ID
+    if (!fileId || fileId.trim() === '') {
+      alert('Error: Invalid file ID');
+      return;
+    }
+    
+    switch (action) {
+      case 'edit':
+        setEditingFileId(fileId);
+        break;
+      case 'delete':
+        setDeletingFileId(fileId);
+        break;
+      case 'download':
+        handleDownload(fileId);
+        break;
+      default:
+        break;
+    }
+  };
+
+  // Handle file download
+  const handleDownload = (fileId: string) => {
+    const file = allFiles.find(f => f.id === fileId);
+    if (!file) {
+      alert('File not found');
+      return;
+    }
+
+    // Create a temporary link element to trigger download
+    const link = document.createElement('a');
+    link.href = `/public/${file.name}`;
+    link.download = file.name;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   // Toggle dropdown menu
@@ -145,10 +165,38 @@ export default function DashboardPage() {
     setShowActionsMenu(showActionsMenu === fileId ? null : fileId);
   };
 
-  // Create table rows
-  const tableRows: TableRow[] = currentFiles.map((file, index) => {
-    const isLastItem = index === currentFiles.length - 1;
-    
+  // Calculate pagination
+  const totalFiles = allFiles.length;
+  const totalPages = Math.ceil(totalFiles / filesPerPage);
+  const startIndex = currentPage * filesPerPage;
+  const endIndex = startIndex + filesPerPage;
+  const currentFiles = allFiles.slice(startIndex, endIndex);
+
+  // Get last modified files (last 3)
+  const lastModifiedFiles = allFiles
+    .sort((a, b) => new Date(b.lastUpdated || 0).getTime() - new Date(a.lastUpdated || 0).getTime())
+    .slice(0, 3);
+
+  // Calculate file statistics
+  const fileStats = {
+    total: allFiles.length,
+    images: allFiles.filter(f => f.kind === 'image').length,
+    videos: allFiles.filter(f => f.kind === 'video').length,
+    audios: allFiles.filter(f => f.kind === 'audio').length,
+    documents: allFiles.filter(f => f.kind === 'document').length,
+  };
+
+  // Prepare pie chart data
+  const pieChartData = {
+    images: fileStats.images,
+    videos: fileStats.videos,
+    audios: fileStats.audios,
+    documents: fileStats.documents,
+    others: fileStats.total - (fileStats.images + fileStats.videos + fileStats.audios + fileStats.documents),
+  };
+
+  // Create table rows without actions column
+  const tableRows: TableRow[] = currentFiles.map((file) => {
     return {
       id: file.id,
       cells: [
@@ -163,44 +211,6 @@ export default function DashboardPage() {
         formatDate(file.uploadedAt),
         // Last updated date
         formatDate(file.lastUpdated),
-        // Actions dropdown
-        <div className="flex items-center justify-end relative" ref={index === currentFiles.length - 1 ? dropdownRef : null}>
-          <button 
-            className="p-1 rounded-full hover:bg-gray-100"
-            onClick={() => toggleActionsMenu(file.id)}
-          >
-            <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
-            </svg>
-          </button>
-          
-          {showActionsMenu === file.id && (
-            <div className={`absolute right-0 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10 ${
-              isLastItem ? 'bottom-8' : 'top-8'
-            }`}>
-              <div className="py-1">
-                <button
-                  onClick={() => handleAction('edit', file.id)}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleAction('delete', file.id)}
-                  className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  Delete
-                </button>
-                <button
-                  onClick={() => handleAction('download', file.id)}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                >
-                  Download
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
       ]
     };
   });
@@ -226,13 +236,12 @@ export default function DashboardPage() {
         <div className="h-64 border border-gray-200 rounded-lg p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Last Modified Files</h2>
           {lastModifiedFiles.length === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-                <p className="text-sm">No files yet</p>
-              </div>
+            <div className="h-full flex items-center justify-center">
+              <AnimatedEmptyState
+                type="lastModified"
+                title="No files yet"
+                description=""
+              />
             </div>
           ) : (
             <div className="flex items-center justify-center">
@@ -267,13 +276,12 @@ export default function DashboardPage() {
             <span className="text-sm text-gray-600">{fileStats.total} Total</span>
           </div>
           {fileStats.total === 0 ? (
-            <div className="text-center py-8">
-              <div className="text-gray-500">
-                <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                <p className="text-sm">No files yet</p>
-              </div>
+            <div className="h-full flex items-center justify-center">
+              <AnimatedEmptyState
+                type="statistics"
+                title="No files yet"
+                description=""
+              />
             </div>
           ) : (
             <div className="flex items-center justify-center">
@@ -304,8 +312,8 @@ export default function DashboardPage() {
                   {/* Audios */}
                   {fileStats.audios > 0 && (
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                        <AudioIcon size={20} className="text-orange-600" />
+                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <AudioIcon size={20} className="text-blue-600" />
                       </div>
                       <div className="text-sm font-bold text-gray-900">{fileStats.audios} Audios</div>
                     </div>
@@ -314,37 +322,18 @@ export default function DashboardPage() {
                   {/* Documents */}
                   {fileStats.documents > 0 && (
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-                        <DocIcon size={20} className="text-red-600" />
+                      <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                        <DocIcon size={20} className="text-orange-600" />
                       </div>
                       <div className="text-sm font-bold text-gray-900">{fileStats.documents} Documents</div>
-                    </div>
-                  )}
-                  
-                  {/* Others */}
-                  {fileStats.others > 0 && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                        <FileIcon size={20} className="text-gray-600" />
-                      </div>
-                      <div className="text-sm font-bold text-gray-900">{fileStats.others} Others</div>
                     </div>
                   )}
                 </div>
               </div>
               
-              {/* Pie Chart - Right Side, aligned with details */}
-              <div className="flex-shrink-0 ml-6">
-                <PieChart 
-                  data={{
-                    images: fileStats.images,
-                    videos: fileStats.videos,
-                    audios: fileStats.audios,
-                    documents: fileStats.documents,
-                    others: fileStats.others,
-                  }}
-                  total={fileStats.total}
-                />
+              {/* Pie Chart - Right Side */}
+              <div className="flex-1 max-w-xs">
+                <PieChart data={pieChartData} total={fileStats.total} />
               </div>
             </div>
           )}
@@ -355,18 +344,15 @@ export default function DashboardPage() {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">All Files</h2>
         {allFiles.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-gray-500">
-              <svg className="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              <p className="text-sm">No files uploaded yet</p>
-            </div>
-          </div>
+          <AnimatedEmptyState
+            type="folders"
+            title="No files uploaded yet"
+            description=""
+          />
         ) : (
           <>
             <Table
-              headers={['Name', 'Size', 'Upload Date', 'Last Updated', '']}
+              headers={['Name', 'Size', 'Upload Date', 'Last Updated']}
               rows={tableRows}
               tableLabel="All files in the system"
             />
@@ -416,6 +402,34 @@ export default function DashboardPage() {
           </>
         )}
       </div>
+
+      {/* Edit File Modal */}
+      {editingFileId && (
+        <EditFileButton
+          fileId={editingFileId}
+          fileName={allFiles.find(f => f.id === editingFileId)?.name || ''}
+          open={!!editingFileId}
+          onOpenChange={(open) => {
+            if (!open) {
+              setEditingFileId(null);
+            }
+          }}
+        />
+      )}
+
+      {/* Delete File Modal */}
+      {deletingFileId && (
+        <DeleteFileButton
+          fileId={deletingFileId}
+          fileName={allFiles.find(f => f.id === deletingFileId)?.name || ''}
+          open={!!deletingFileId}
+          onOpenChange={(open) => {
+            if (!open) {
+              setDeletingFileId(null);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { FolderCard } from '@/components/shared/FolderCard';
 import { FileCard } from '@/components/shared/FileCard';
-import { FolderIcon } from '@/components/shared/icons';
+import { AnimatedEmptyState } from '@/components/shared/AnimatedEmptyState';
 import { EditFolderButton } from '@/components/business/EditFolderButton';
 import { DeleteFolderButton } from '@/components/business/DeleteFolderButton';
 import { EditFileButton } from '@/components/business/EditFileButton';
@@ -31,18 +31,17 @@ export function FoldersClient({ folders, files }: { folders: FolderSummary[], fi
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  // Determine if an item is in the first row (first 4 items)
+  const isFirstRow = (index: number) => index < 4;
+
   return (
     <div className="space-y-4">
       {totalItems === 0 ? (
-        <div className="text-center py-12">
-          <FolderIcon size={48} className="mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            No folders or files yet
-          </h3>
-          <p className="text-gray-500 mb-4">
-            Create your first folder or upload a file to get started
-          </p>
-        </div>
+        <AnimatedEmptyState
+          type="folders"
+          title="No folders or files yet"
+          description="Create your first folder or upload a file to get started"
+        />
       ) : (
         <div className="grid grid-cols-4 gap-6">
           {/* Render folders */}
@@ -57,6 +56,7 @@ export function FoldersClient({ folders, files }: { folders: FolderSummary[], fi
               onEdit={() => setEditingFolderId(f.id)}
               onDelete={() => setDeletingFolderId(f.id)}
               isLastItem={index === folders.length - 1 && files.length === 0}
+              isFirstRow={isFirstRow(index)}
             />
           ))}
           
@@ -71,6 +71,7 @@ export function FoldersClient({ folders, files }: { folders: FolderSummary[], fi
               onEdit={() => setEditingFileId(f.id)}
               onDelete={() => setDeletingFileId(f.id)}
               isLastItem={index === files.length - 1}
+              isFirstRow={isFirstRow(folders.length + index)}
             />
           ))}
         </div>

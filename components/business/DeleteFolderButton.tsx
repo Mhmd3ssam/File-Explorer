@@ -1,86 +1,91 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
 interface DeleteFolderButtonProps {
   folderId: string;
   folderName: string;
-  open?: boolean;
+  open: boolean;
   onOpenChange?: (open: boolean) => void;
 }
 
 export function DeleteFolderButton({ folderId, folderName, open: externalOpen, onOpenChange }: DeleteFolderButtonProps) {
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [open, setOpen] = useState(externalOpen);
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
 
-  // Use external open state if provided, otherwise use internal state
-  const isOpen = externalOpen !== undefined ? externalOpen : internalOpen;
-  const setOpen = onOpenChange || setInternalOpen;
-
-  // Reset loading state when modal opens
+  // Sync with external open state
   useEffect(() => {
-    if (isOpen) {
-      setLoading(false);
+    setOpen(externalOpen);
+  }, [externalOpen]);
+
+  // Sync with external onOpenChange
+  useEffect(() => {
+    if (onOpenChange) {
+      onOpenChange(open);
     }
-  }, [isOpen]);
+  }, [open, onOpenChange]);
 
   const handleDelete = async () => {
-    if (loading) return;
-
     setLoading(true);
+    
     try {
-      // For now, we'll just update the in-memory data
-      // In a real app, this would be an API call
-      const res = await fetch(`/api/folders/${folderId}`, { method: 'DELETE' });
-      if (!res.ok) { throw new Error('Failed'); }
-      router.refresh();
-      setOpen(false);
+      const response = await fetch(`/api/folders/${folderId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // Refresh the page to show updated data
+        window.location.reload();
+      } else {
+        const error = await response.json();
+        console.error('Failed to delete folder:', error);
+        alert('Failed to delete folder. Please try again.');
+      }
     } catch (error) {
-      console.error('Failed to delete folder:', error);
-      alert('Failed to delete folder');
+      console.error('Error deleting folder:', error);
+      alert('Error deleting folder. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setOpen}>
-      <DialogHeader>
-        <DialogTitle>Delete Folder</DialogTitle>
-        <DialogDescription>
-          Are you sure you want to delete "{folderName}"? This action cannot be undone.
-        </DialogDescription>
-      </DialogHeader>
-      
-      <DialogContent>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Delete Folder</DialogTitle>
+          <DialogDescription>
+            Are you sure you want to delete "{folderName}"? This action cannot be undone.
+          </DialogDescription>
+        </DialogHeader>
+        
         <div className="p-4 bg-red-50 border border-red-200 rounded-md">
           <p className="text-sm text-red-800">
             <strong>Warning:</strong> This will permanently delete the folder and all its contents.
           </p>
         </div>
+        
+        <DialogFooter>
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={() => setOpen(false)}
+            disabled={loading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDelete}
+            disabled={loading}
+            className="bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700"
+            style={{ backgroundColor: '#dc2626' }}
+          >
+            {loading ? 'Deleting...' : 'Delete Folder'}
+          </Button>
+        </DialogFooter>
       </DialogContent>
-      
-      <DialogFooter>
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={() => setOpen(false)}
-          disabled={loading}
-        >
-          Cancel
-        </Button>
-        <Button 
-          onClick={handleDelete}
-          disabled={loading}
-          className="bg-red-600 hover:bg-red-700 text-white"
-        >
-          {loading ? 'Deleting...' : 'Delete Folder'}
-        </Button>
-      </DialogFooter>
     </Dialog>
   );
 }
