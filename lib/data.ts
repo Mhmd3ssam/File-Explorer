@@ -107,7 +107,7 @@ export function findFile(id: string, current: FolderNode = root): (FileNode & { 
   return null;
 }
 
-// Get all files from root
+// Get all files from the entire system (root + all subfolders)
 export function getAllFiles(current: FolderNode = root): FileNode[] {
   const files: FileNode[] = [];
   
@@ -268,3 +268,5 @@ export function deleteFile(fileId: string, current: FolderNode = root): boolean 
 }
 
 export { root };
+
+// Get all files from the entire system (root + all subfolders)

@@ -295,7 +295,7 @@ export default function DashboardPage() {
                       <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                         <ImageIcon size={20} className="text-green-600" />
                       </div>
-                      <div className="text-sm font-bold text-gray-900">{fileStats.images} Images</div>
+                      <div className="text-xs font-bold text-gray-900">{fileStats.images} Images</div>
                     </div>
                   )}
                   
@@ -305,7 +305,7 @@ export default function DashboardPage() {
                       <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                         <VideoIcon size={20} className="text-purple-600" />
                       </div>
-                      <div className="text-sm font-bold text-gray-900">{fileStats.videos} Videos</div>
+                      <div className="text-xs font-bold text-gray-900">{fileStats.videos} Videos</div>
                     </div>
                   )}
                   
@@ -315,7 +315,7 @@ export default function DashboardPage() {
                       <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                         <AudioIcon size={20} className="text-blue-600" />
                       </div>
-                      <div className="text-sm font-bold text-gray-900">{fileStats.audios} Audios</div>
+                      <div className="text-xs font-bold text-gray-900">{fileStats.audios} Audios</div>
                     </div>
                   )}
                   
@@ -325,7 +325,7 @@ export default function DashboardPage() {
                       <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                         <DocIcon size={20} className="text-orange-600" />
                       </div>
-                      <div className="text-sm font-bold text-gray-900">{fileStats.documents} Documents</div>
+                      <div className="text-xs font-bold text-gray-900">{fileStats.documents} Documents</div>
                     </div>
                   )}
                 </div>

@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { findFolder } from '@/lib/data';
+import { getAllFiles } from '@/lib/data';
 
 export async function GET() {
   try {
-    const root = findFolder('root');
-    const allFiles = (root?.children || []).filter((child) => child.type === 'file');
+    const allFiles = getAllFiles();
     return NextResponse.json(allFiles);
   } catch (error) {
     console.error('Failed to get files:', error);
