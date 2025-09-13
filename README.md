@@ -1,64 +1,145 @@
-# Next.js File Explorer Interview Task
+# File Explorer - Modern File Management System
 
-This repository contains a partially implemented file explorer built with **Next.js (App Router)**, **TypeScript**, and **Tailwind CSS**. Data is stored in memory on the server.
+A modern, responsive file management system built with Next.js 13, featuring an intuitive interface for organizing and managing files and folders. This application provides a seamless experience for file organization, with support for various file types and nested folder structures.
 
-## Existing Features
+## 🌟 Key Features
 
-* Basic layout with a sidebar and main area.
-* API endpoints to create folders and files.
-* An in-memory data structure representing a folder tree.
+- **Interactive Dashboard** with file statistics and recent activities
+- **Hierarchical Folder Structure** with unlimited nesting
+- **File Type Categorization** (Documents, Images, Videos, Audio)
+- **Breadcrumb Navigation** for easy folder traversal
+- **Real-time File Operations** (Create, Edit, Delete)
+- **Modern UI/UX** with responsive design
+- **File Size Visualization** and statistics
 
-## Candidate Tasks
+## 🖼️ Screenshots
 
-1. Enable users to create files inside folders. This requires:
+### Dashboard View
 
-   * Using the `/api/files/[id]` endpoint to add new files.
-   * Adding UI controls for file creation.
+![Dashboard](docs/Dashboard.png)
+Modern dashboard showing file statistics, recent files, and a comprehensive file list.
 
-2. Display different file types (e.g., `.png`, `.mp4`, `.pdf`).
+### Root Folder View
 
-3. Implement a "step back" mechanism to navigate to the parent folder (not the browser’s back button). If a user opens a folder, they should be able to return to its parent.
+![Root Folder](docs/Root%20Folder.png)
+Main folder view with grid layout and quick actions.
 
-4. Fix the bug where creating a folder inside a subfolder mistakenly creates it in the parent folder.
+### Nested Folder Structure
 
-5. Refactor the existing codebase to improve clarity, maintainability, and structure.
+![Nested Folder](docs/Nestad%20Folder.png)
+Support for unlimited folder nesting with breadcrumb navigation.
 
-6. Enhance the design to make it look and feel more like a real application. This includes:
+### File Management
 
-   * Responsive layout.
-   * Optimized file viewing.
+![Edit File](docs/Edit%20File.png)
+Easy file editing with modal interface.
 
-7. (Optional) Implement a **Recent Files** page.
+![Delete File](docs/Delete%20File.png)
+Secure file deletion with confirmation.
 
-8. (Optional) Add any other features you’d like!
+## 🏗️ Application Architecture
 
-## Deliverables
+### Folder Structure
 
-1. A short video recording (maximum 2 minutes) demonstrating the functionality, including:
+```
+├── app/                    # Next.js 13 App Router
+│   ├── (modules)/         # Main application modules
+│   │   ├── dashboard/     # Dashboard page
+│   │   ├── folders/       # Folder views
+│   │   ├── files/        # File type specific views
+│   ├── api/              # API routes
+├── components/           # React components
+│   ├── business/        # Business logic components
+│   ├── shared/          # Reusable components
+│   ├── ui/              # UI primitives
+├── lib/                 # Utilities and helpers
+└── public/              # Static assets
+```
 
-   * Creating folders and files.
-   * Viewing files.
-   * Responsive design in action.
+## 🛠️ Technology Stack
 
-2. A link to a GitHub repository containing the source code.
+- **Framework**: Next.js 13 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **State Management**: React Hooks
+- **UI Components**:
+  - Shadcn UI
+  - Radix UI primitives
+- **Icons**: Lucide React
+- **File System**: Custom in-memory implementation
 
-## Design Reference
+## 🎯 Problem Solving
 
-The diagram below illustrates the expected design:
+This application addresses several common file management challenges:
 
-![Design](docs/image.png)
+1. **Organization**:
 
-## Getting Started
+   - Hierarchical folder structure
+   - File type categorization
+   - Quick access to recent files
 
-Install dependencies and run the development server:
+2. **Navigation**:
+
+   - Breadcrumb trail for deep nesting
+   - Quick return to parent folders
+   - Intuitive grid/list views
+
+3. **File Operations**:
+
+   - Drag-and-drop file uploads
+   - Bulk operations
+   - Quick edit and delete
+
+4. **Visual Feedback**:
+   - File type indicators
+   - Size visualization
+   - Operation confirmations
+
+## 🚀 Getting Started
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/your-username/file-explorer.git
+```
+
+2. Install dependencies:
 
 ```bash
 npm install
+```
+
+3. Start the development server:
+
+```bash
 npm run dev
 ```
 
-The app uses an in-memory store, so all data will be reset when the server restarts.
+4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
----
+## 💡 Usage
 
-✨ Good luck!
+- Use the sidebar to navigate between different file types
+- Click on folders to explore their contents
+- Use the "+" button to create new files or folders
+- Click on file/folder cards for quick actions
+- Use the dashboard for an overview of your files
+
+## 📝 Notes
+
+- The application uses an in-memory store, so data will reset when the server restarts
+- File sizes are simulated for demonstration purposes
+- Supports common file types: documents, images, videos, and audio files
+
+## 🔜 Future Enhancements
+
+- [ ] Real database integration
+- [ ] File preview functionality
+- [ ] Search capabilities
+- [ ] File sharing features
+- [ ] Cloud storage integration
+- [ ] Collaborative features
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
