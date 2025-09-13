@@ -1,6 +1,7 @@
 import { findFolder, getFolderStats } from '@/lib/data';
-import { FoldersClient, type FolderSummary } from '@/components/business/FoldersClient';
-import type { FileNode } from '@/lib/data-client';
+import { FoldersClient } from '@/components/business/FoldersClient';
+import type { FileNode, FolderSummary } from '@/lib/data-client';
+import { formatSize } from '@/lib/data-client';
 
 export default function FoldersPage() {
   const root = findFolder('root');
@@ -11,8 +12,8 @@ export default function FoldersPage() {
   
   // Create folder summaries
   const folderSummaries: FolderSummary[] = folders.map((f) => {
-    const stats = getFolderStats(f);
-    return { id: f.id, name: f.name, fileCount: stats.fileCount, size: stats.size };
+    const stats = getFolderStats(f.id);
+    return { id: f.id, name: f.name, fileCount: stats.fileCount, size: formatSize(stats.totalSize) };
   });
 
   return <FoldersClient folders={folderSummaries} files={files} />;

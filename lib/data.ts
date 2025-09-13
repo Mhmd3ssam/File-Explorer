@@ -270,6 +270,25 @@ export function deleteFile(fileId: string, current: FolderNode = root): boolean 
   return traverse(current);
 }
 
+// Get all folders from the root
+export function getAllFolders(current: FolderNode = root): FolderNode[] {
+  const folders: FolderNode[] = [];
+  
+  function traverse(node: FolderNode) {
+    if (node.id !== 'root') {
+      folders.push(node);
+    }
+    for (const child of node.children) {
+      if (child.type === 'folder') {
+        traverse(child);
+      }
+    }
+  }
+  
+  traverse(current);
+  return folders;
+}
+
 export { root };
 
 // Get all files from the entire system (root + all subfolders)
