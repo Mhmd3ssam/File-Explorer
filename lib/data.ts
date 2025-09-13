@@ -53,7 +53,7 @@ function loadData(): FolderNode {
       
       const migrated = migrateNode(loaded);
       console.log('Loaded existing file structure from disk with', migrated.children.length, 'items');
-      console.log('Root children:', migrated.children.map(c => ({ name: c.name, type: c.type })));
+      console.log('Root children:', migrated.children.map((c: FolderNode | FileNode) => ({ name: c.name, type: c.type })));
       return migrated;
     } else {
       console.log('No existing data file found, starting with empty structure');
