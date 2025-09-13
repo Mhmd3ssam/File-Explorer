@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { CreateFileButton } from '@/components/business/CreateFileButton';
 import { DocIcon } from '@/components/shared/icons';
 
 export default function DocumentsPage() {
@@ -23,27 +22,9 @@ export default function DocumentsPage() {
           <p className="text-gray-500 mb-4">
             Upload your first document to get started
           </p>
-          <motion.div
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.1 }}
-          >
-            <button
-              onClick={() => setShowFileModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-            >
-              <DocIcon size={16} />
-              Upload Document
-            </button>
-          </motion.div>
         </motion.div>
       </div>
 
-      <CreateFileButton
-        parentId="root"
-        open={showFileModal}
-        onOpenChange={setShowFileModal}
-      />
     </div>
   );
 }

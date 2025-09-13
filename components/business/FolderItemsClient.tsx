@@ -49,7 +49,7 @@ export function FolderItemsClient({ nodes }: { nodes: AnyNode[] }) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-4 gap-6">
-        {nodes.map((n: any) => (
+        {nodes.map((n: any, index: number) => (
           n.type === 'folder' ? (
             <FolderCard
               key={n.id}
@@ -60,6 +60,7 @@ export function FolderItemsClient({ nodes }: { nodes: AnyNode[] }) {
               href={`/folders/folder/${n.id}`}
               onEdit={() => setEditingFolderId(n.id)}
               onDelete={() => setDeletingFolderId(n.id)}
+              isLastItem={index === nodes.length - 1}
             />
           ) : (
             <FileCard 
@@ -76,6 +77,7 @@ export function FolderItemsClient({ nodes }: { nodes: AnyNode[] }) {
                 // TODO: Implement file deletion
                 console.log('Delete file:', n.name);
               }}
+              isLastItem={index === nodes.length - 1}
             />
           )
         ))}

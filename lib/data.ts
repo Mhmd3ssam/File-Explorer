@@ -6,6 +6,8 @@ export type FileNode = {
   name: string;
   type: "file";
   kind?: "document" | "image" | "video" | "audio" | "unknown";
+  uploadedAt: string; // ISO date string
+  lastUpdated: string; // ISO date string
 };
 
 export type FolderNode = {
@@ -32,9 +34,23 @@ function loadData(): FolderNode {
     if (existsSync(DATA_FILE_PATH)) {
       const data = readFileSync(DATA_FILE_PATH, 'utf-8');
       const loaded = JSON.parse(data);
-      console.log('Loaded existing file structure from disk with', loaded.children.length, 'items');
-      console.log('Root children:', loaded.children.map(c => ({ name: c.name, type: c.type })));
-      return loaded;
+      
+      // Migrate existing files to include date fields if they don't exist
+      const migrateNode = (node: any): any => {
+        if (node.type === 'file' && !node.uploadedAt) {
+          node.uploadedAt = new Date().toISOString();
+          node.lastUpdated = new Date().toISOString();
+        }
+        if (node.children) {
+          node.children = node.children.map(migrateNode);
+        }
+        return node;
+      };
+      
+      const migrated = migrateNode(loaded);
+      console.log('Loaded existing file structure from disk with', migrated.children.length, 'items');
+      console.log('Root children:', migrated.children.map(c => ({ name: c.name, type: c.type })));
+      return migrated;
     } else {
       console.log('No existing data file found, starting with empty structure');
       return { ...defaultRoot };
@@ -59,7 +75,7 @@ function saveData(): void {
   }
 }
 
-export { root };
+export { root, saveData };
 
 export function findFolder(
   id: string,
@@ -98,84 +114,110 @@ export function getAllFolders(current: FolderNode = root): FolderNode[] {
   return folders;
 }
 
-export function getFolderStats(folder: FolderNode): { fileCount: number; size: string } {
-  let fileCount = 0;
-  let totalSize = 0; // In bytes (simulated)
-  
-  function traverse(node: FolderNode | FileNode) {
-    if (node.type === 'file') {
-      fileCount++;
-      // Simulate file size based on name length and type
-      totalSize += node.name.length * 1024; // 1KB per character as simulation
-    } else {
-      for (const child of node.children) {
+export function getFolderStats(folderId: string): { totalFiles: number; totalFolders: number; totalSize: number } {
+  const folder = findFolder(folderId);
+  if (!folder) return { totalFiles: 0, totalFolders: 0, totalSize: 0 };
+
+  let totalFiles = 0;
+  let totalFolders = 0;
+  let totalSize = 0;
+
+  function traverse(node: FolderNode) {
+    for (const child of node.children) {
+      if (child.type === 'file') {
+        totalFiles++;
+        totalSize += getFileSize(child.name);
+      } else if (child.type === 'folder') {
+        totalFolders++;
         traverse(child);
       }
     }
   }
-  
+
   traverse(folder);
-  
-  // Format size
-  const formatSize = (bytes: number): string => {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-  };
-  
-  return {
-    fileCount,
-    size: formatSize(totalSize)
-  };
+  return { totalFiles, totalFolders, totalSize };
 }
 
-export function getFolderPath(id: string): FolderNode[] {
-  const path: FolderNode[] = [];
-  function dfs(node: FolderNode): boolean {
-    path.push(node);
-    if (node.id == id) return true;
+export function getFileSize(fileName: string): number {
+  // Simulate file size based on name length
+  return fileName.length * 1024;
+}
+
+export function updateFileLastUpdated(fileId: string, current: FolderNode = root): boolean {
+  function traverse(node: FolderNode): boolean {
     for (const child of node.children) {
-      if (child.type === 'folder') {
-        if (dfs(child)) return true;
+      if (child.type === 'file' && child.id === fileId) {
+        child.lastUpdated = new Date().toISOString();
+        return true;
+      } else if (child.type === 'folder') {
+        if (traverse(child)) return true;
       }
     }
-    path.pop();
     return false;
   }
-  dfs(root as any);
+  
+  const updated = traverse(current);
+  if (updated) {
+    saveData();
+  }
+  return updated;
+}
+
+export function getFolderPath(folderId: string, current: FolderNode = root): FolderNode[] {
+  const path: FolderNode[] = [];
+  
+  function traverse(node: FolderNode, currentPath: FolderNode[]): boolean {
+    if (node.id === folderId) {
+      path.push(...currentPath, node);
+      return true;
+    }
+    
+    for (const child of node.children) {
+      if (child.type === 'folder') {
+        if (traverse(child, [...currentPath, node])) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+  
+  traverse(current, []);
   return path;
 }
 
-export function renameFolder(id: string, newName: string, current: FolderNode = root): boolean {
-  if (current.id === id) { 
-    current.name = newName; 
-    saveData(); // Save after modification
-    return true; 
-  }
-  for (const child of current.children) {
-    if (child.type === 'folder') {
-      if (renameFolder(id, newName, child)) return true;
+export function renameFolder(folderId: string, newName: string, current: FolderNode = root): boolean {
+  function traverse(node: FolderNode): boolean {
+    if (node.id === folderId) {
+      node.name = newName;
+      return true;
     }
-  }
-  return false;
-}
-
-export function deleteFolderById(id: string, current: FolderNode = root): boolean {
-  for (let i = 0; i < current.children.length; i++) {
-    const child = current.children[i];
-    if (child.type === 'folder') {
-      if (child.id === id) { 
-        current.children.splice(i, 1); 
-        saveData(); // Save after modification
-        return true; 
+    
+    for (const child of node.children) {
+      if (child.type === 'folder') {
+        if (traverse(child)) return true;
       }
-      if (deleteFolderById(id, child)) return true;
     }
+    return false;
   }
-  return false;
+  
+  return traverse(current);
 }
 
-// Export the save function so API routes can use it
-export { saveData };
+export function deleteFolderById(folderId: string, current: FolderNode = root): boolean {
+  function traverse(node: FolderNode): boolean {
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i];
+      if (child.type === 'folder' && child.id === folderId) {
+        node.children.splice(i, 1);
+        return true;
+      }
+      if (child.type === 'folder') {
+        if (traverse(child)) return true;
+      }
+    }
+    return false;
+  }
+  
+  return traverse(current);
+}

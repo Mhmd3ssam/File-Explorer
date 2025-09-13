@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { FolderIcon } from '@/components/shared/icons';
@@ -13,17 +13,38 @@ interface FolderCardProps {
   href: string;
   onEdit?: () => void;
   onDelete?: () => void;
+  isLastItem?: boolean; // Add prop to determine if this is the last item
 }
 
-export function FolderCard({ id, name, fileCount, size, href, onEdit, onDelete }: FolderCardProps) {
+export function FolderCard({ id, name, fileCount, size, href, onEdit, onDelete, isLastItem = false }: FolderCardProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // Toggle dropdown menu
+  const toggleMenu = () => {
+    setShowMenu(!showMenu);
+  };
 
   return (
     <div className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:cursor-pointer hover:border-blue-500 hover:border-2 w-full h-32">
       {/* Three dots menu */}
-      <div className="absolute top-3 right-3">
+      <div className="absolute top-3 right-3" ref={dropdownRef}>
         <button
-          onClick={() => setShowMenu(!showMenu)}
+          onClick={toggleMenu}
           className="p-1 rounded-full hover:bg-gray-100 opacity-0 group-hover:opacity-100"
         >
           <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
@@ -32,7 +53,9 @@ export function FolderCard({ id, name, fileCount, size, href, onEdit, onDelete }
         </button>
         
         {showMenu && (
-          <div className="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+          <div className={`absolute right-0 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10 ${
+            isLastItem ? 'bottom-8' : 'top-8'
+          }`}>
             <div className="py-1">
               <button
                 onClick={() => {

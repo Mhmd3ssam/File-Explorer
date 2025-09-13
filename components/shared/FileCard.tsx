@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { DocIcon, ImageIcon, VideoIcon, AudioIcon, FileIcon } from '@/components/shared/icons';
 
@@ -11,10 +11,26 @@ interface FileCardProps {
   size?: string;
   onEdit?: () => void;
   onDelete?: () => void;
+  isLastItem?: boolean; // Add prop to determine if this is the last item
 }
 
-export function FileCard({ id, name, kind, size, onEdit, onDelete }: FileCardProps) {
+export function FileCard({ id, name, kind, size, onEdit, onDelete, isLastItem = false }: FileCardProps) {
   const [showMenu, setShowMenu] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Get appropriate icon based on file type
   const getFileIcon = () => {
@@ -38,12 +54,17 @@ export function FileCard({ id, name, kind, size, onEdit, onDelete }: FileCardPro
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
 
+  // Toggle dropdown menu
+  const toggleMenu = () => {
+    setShowMenu(!showMenu);
+  };
+
   return (
     <div className="group relative bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md hover:cursor-pointer hover:border-blue-500 hover:border-2 w-full h-32">
       {/* Three dots menu */}
-      <div className="absolute top-3 right-3">
+      <div className="absolute top-3 right-3" ref={dropdownRef}>
         <button
-          onClick={() => setShowMenu(!showMenu)}
+          onClick={toggleMenu}
           className="p-1 rounded-full hover:bg-gray-100 opacity-0 group-hover:opacity-100"
         >
           <svg className="w-4 h-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
@@ -52,7 +73,9 @@ export function FileCard({ id, name, kind, size, onEdit, onDelete }: FileCardPro
         </button>
         
         {showMenu && (
-          <div className="absolute right-0 mt-1 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10">
+          <div className={`absolute right-0 w-32 bg-white border border-gray-200 rounded-md shadow-lg z-10 ${
+            isLastItem ? 'bottom-8' : 'top-8'
+          }`}>
             <div className="py-1">
               <button
                 onClick={() => {

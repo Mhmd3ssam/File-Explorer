@@ -88,12 +88,17 @@ export async function POST(
       }
     }
 
+    // Get current timestamp for upload date
+    const now = new Date().toISOString();
+
     // Update in-memory structure after successful file creation
     parent.children.push({
       id: randomUUID(),
       name: finalName,
       type: 'file',
       kind,
+      uploadedAt: now,
+      lastUpdated: now,
     });
 
     // Save the updated structure to disk

@@ -50,7 +50,7 @@ export function FoldersClient({ folders, files }: { folders: FolderSummary[], fi
       ) : (
         <div className="grid grid-cols-4 gap-6">
           {/* Render folders */}
-          {folders.map((f) => (
+          {folders.map((f, index) => (
             <FolderCard
               key={f.id}
               id={f.id}
@@ -60,11 +60,12 @@ export function FoldersClient({ folders, files }: { folders: FolderSummary[], fi
               href={`/folders/folder/${f.id}`}
               onEdit={() => setEditingFolderId(f.id)}
               onDelete={() => setDeletingFolderId(f.id)}
+              isLastItem={index === folders.length - 1 && files.length === 0}
             />
           ))}
           
           {/* Render files */}
-          {files.map((f) => (
+          {files.map((f, index) => (
             <FileCard
               key={f.id}
               id={f.id}
@@ -79,6 +80,7 @@ export function FoldersClient({ folders, files }: { folders: FolderSummary[], fi
                 // TODO: Implement file deletion
                 console.log('Delete file:', f.name);
               }}
+              isLastItem={index === files.length - 1}
             />
           ))}
         </div>
