@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
-import { findFolder, saveData } from '@/lib/data';
-import { writeFile, mkdir } from 'fs/promises';
-import { join, basename } from 'path';
+import { findFolder, findFile, renameFile, deleteFile, saveData } from '@/lib/data';
 import { randomUUID } from 'crypto';
+import { writeFile, mkdir, unlink } from 'fs/promises';
+import { join, basename } from 'path';
 
 export const runtime = 'nodejs';
 
@@ -112,12 +112,84 @@ export async function POST(
   revalidatePath('/dashboard');
   revalidatePath('/folders');
   if (params.id === 'root') {
-    // For root folder, revalidate the main folders page
     revalidatePath('/folders');
   } else {
-    revalidatePath(`/dashboard/folder/${params.id}`);
     revalidatePath(`/folders/folder/${params.id}`);
   }
+
+  return NextResponse.json({ success: true });
+}
+
+export async function PATCH(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const { name } = await req.json();
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  
+  if (!trimmed) {
+    return NextResponse.json({ error: 'Invalid name' }, { status: 400 });
+  }
+
+  const file = findFile(params.id);
+  if (!file) {
+    return NextResponse.json({ error: 'File not found' }, { status: 404 });
+  }
+
+  // Check if the new name is the same as the current name
+  if (trimmed === file.name) {
+    return NextResponse.json({ success: true });
+  }
+
+  // Rename the file in the data structure
+  const success = renameFile(params.id, trimmed);
+  if (!success) {
+    return NextResponse.json({ error: 'Failed to rename file' }, { status: 500 });
+  }
+
+  // Save the updated structure to disk
+  saveData();
+
+  // Revalidate paths
+  revalidatePath('/dashboard');
+  revalidatePath('/folders');
+  revalidatePath(`/folders/folder/${file.parentId}`);
+
+  return NextResponse.json({ success: true });
+}
+
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  const file = findFile(params.id);
+  if (!file) {
+    return NextResponse.json({ error: 'File not found' }, { status: 404 });
+  }
+
+  try {
+    // Delete the physical file from public directory
+    const publicDir = join(process.cwd(), 'public');
+    const filePath = join(publicDir, file.name);
+    await unlink(filePath);
+  } catch (error) {
+    console.error('Failed to delete physical file:', error);
+    // Continue with database deletion even if physical file deletion fails
+  }
+
+  // Delete the file from the data structure
+  const success = deleteFile(params.id);
+  if (!success) {
+    return NextResponse.json({ error: 'Failed to delete file' }, { status: 500 });
+  }
+
+  // Save the updated structure to disk
+  saveData();
+
+  // Revalidate paths
+  revalidatePath('/dashboard');
+  revalidatePath('/folders');
+  revalidatePath(`/folders/folder/${file.parentId}`);
 
   return NextResponse.json({ success: true });
 }

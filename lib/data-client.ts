@@ -5,6 +5,7 @@ export type FileNode = {
   kind?: "document" | "image" | "video" | "audio" | "unknown";
   uploadedAt: string; // ISO date string
   lastUpdated: string; // ISO date string
+  parentId?: string; // Add parentId to track parent folder
 };
 
 export type FolderNode = {
@@ -17,7 +18,6 @@ export type FolderNode = {
 export type FolderSummary = {
   id: string;
   name: string;
-  totalFiles: number;
-  totalFolders: number;
-  totalSize: number;
+  fileCount: number;
+  size: string;
 };

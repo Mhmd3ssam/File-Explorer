@@ -8,6 +8,7 @@ export type FileNode = {
   kind?: "document" | "image" | "video" | "audio" | "unknown";
   uploadedAt: string; // ISO date string
   lastUpdated: string; // ISO date string
+  parentId?: string; // Add parentId to track parent folder
 };
 
 export type FolderNode = {
@@ -36,13 +37,16 @@ function loadData(): FolderNode {
       const loaded = JSON.parse(data);
       
       // Migrate existing files to include date fields if they don't exist
-      const migrateNode = (node: any): any => {
+      const migrateNode = (node: any, parentId?: string): any => {
         if (node.type === 'file' && !node.uploadedAt) {
           node.uploadedAt = new Date().toISOString();
           node.lastUpdated = new Date().toISOString();
         }
+        if (node.type === 'file') {
+          node.parentId = parentId;
+        }
         if (node.children) {
-          node.children = node.children.map(migrateNode);
+          node.children = node.children.map((child: any) => migrateNode(child, node.id));
         }
         return node;
       };
@@ -64,83 +68,88 @@ function loadData(): FolderNode {
 // Initialize root with loaded data
 const root: FolderNode = loadData();
 
-// Save data to file
-function saveData(): void {
+// Save data to disk
+export function saveData(): void {
   try {
     mkdirSync(join(process.cwd(), 'data'), { recursive: true });
     writeFileSync(DATA_FILE_PATH, JSON.stringify(root, null, 2));
-    console.log('Saved file structure to disk with', root.children.length, 'items');
+    console.log('Data saved to disk');
   } catch (error) {
-    console.error('Failed to save data:', error);
+    console.error('Error saving data:', error);
   }
 }
 
-export { root, saveData };
-
-export function findFolder(
-  id: string,
-  current: FolderNode = root
-): FolderNode | null {
+// Find a folder by ID
+export function findFolder(id: string, current: FolderNode = root): FolderNode | null {
   if (current.id === id) return current;
+  
   for (const child of current.children) {
-    if (child.type === "folder") {
-      const result = findFolder(id, child);
-      if (result) return result;
+    if (child.type === 'folder') {
+      const found = findFolder(id, child);
+      if (found) return found;
     }
   }
+  
   return null;
 }
 
-export function getAllFolders(current: FolderNode = root): FolderNode[] {
-  const folders: FolderNode[] = [];
-  
-  function traverse(node: FolderNode, path: string = '') {
-    if (node.id !== 'root') {
-      folders.push({
-        ...node,
-        name: path ? `${path}/${node.name}` : node.name
-      });
+// Find a file by ID
+export function findFile(id: string, current: FolderNode = root): (FileNode & { parentId: string }) | null {
+  for (const child of current.children) {
+    if (child.type === 'file' && child.id === id) {
+      return { ...child, parentId: current.id };
+    } else if (child.type === 'folder') {
+      const found = findFile(id, child);
+      if (found) return found;
     }
-    
+  }
+  
+  return null;
+}
+
+// Get all files from root
+export function getAllFiles(current: FolderNode = root): FileNode[] {
+  const files: FileNode[] = [];
+  
+  function traverse(node: FolderNode) {
     for (const child of node.children) {
-      if (child.type === 'folder') {
-        const newPath = path ? `${path}/${node.name}` : node.name;
-        traverse(child, newPath);
+      if (child.type === 'file') {
+        files.push(child);
+      } else if (child.type === 'folder') {
+        traverse(child);
       }
     }
   }
   
   traverse(current);
-  return folders;
+  return files;
 }
 
-export function getFolderStats(folderId: string): { totalFiles: number; totalFolders: number; totalSize: number } {
-  const folder = findFolder(folderId);
-  if (!folder) return { totalFiles: 0, totalFolders: 0, totalSize: 0 };
-
-  let totalFiles = 0;
-  let totalFolders = 0;
+// Get folder statistics
+export function getFolderStats(folderId: string, current: FolderNode = root): { fileCount: number; totalSize: number } {
+  const folder = findFolder(folderId, current);
+  if (!folder) return { fileCount: 0, totalSize: 0 };
+  
+  let fileCount = 0;
   let totalSize = 0;
-
+  
   function traverse(node: FolderNode) {
     for (const child of node.children) {
       if (child.type === 'file') {
-        totalFiles++;
+        fileCount++;
         totalSize += getFileSize(child.name);
       } else if (child.type === 'folder') {
-        totalFolders++;
         traverse(child);
       }
     }
   }
-
+  
   traverse(folder);
-  return { totalFiles, totalFolders, totalSize };
+  return { fileCount, totalSize };
 }
 
 export function getFileSize(fileName: string): number {
-  // Simulate file size based on name length
-  return fileName.length * 1024;
+  return fileName.length * 1024; // Mock size calculation
 }
 
 export function updateFileLastUpdated(fileId: string, current: FolderNode = root): boolean {
@@ -221,3 +230,41 @@ export function deleteFolderById(folderId: string, current: FolderNode = root): 
   
   return traverse(current);
 }
+
+// Rename a file
+export function renameFile(fileId: string, newName: string, current: FolderNode = root): boolean {
+  function traverse(node: FolderNode): boolean {
+    for (const child of node.children) {
+      if (child.type === 'file' && child.id === fileId) {
+        child.name = newName;
+        child.lastUpdated = new Date().toISOString();
+        return true;
+      } else if (child.type === 'folder') {
+        if (traverse(child)) return true;
+      }
+    }
+    return false;
+  }
+  
+  return traverse(current);
+}
+
+// Delete a file
+export function deleteFile(fileId: string, current: FolderNode = root): boolean {
+  function traverse(node: FolderNode): boolean {
+    for (let i = 0; i < node.children.length; i++) {
+      const child = node.children[i];
+      if (child.type === 'file' && child.id === fileId) {
+        node.children.splice(i, 1);
+        return true;
+      } else if (child.type === 'folder') {
+        if (traverse(child)) return true;
+      }
+    }
+    return false;
+  }
+  
+  return traverse(current);
+}
+
+export { root };

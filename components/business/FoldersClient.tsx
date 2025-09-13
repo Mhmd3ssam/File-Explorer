@@ -1,38 +1,34 @@
 "use client";
 
-import { useState } from "react";
-import { FolderIcon } from "@/components/shared/icons";
-import { EditFolderButton } from "@/components/business/EditFolderButton";
-import { DeleteFolderButton } from "@/components/business/DeleteFolderButton";
-import { FolderCard } from "@/components/shared/FolderCard";
-import { FileCard } from "@/components/shared/FileCard";
-import type { FolderNode, FileNode } from "@/lib/data-client";
-
-export type FolderSummary = {
-  id: string;
-  name: string;
-  fileCount: number;
-  size: string;
-};
+import { useState } from 'react';
+import { FolderCard } from '@/components/shared/FolderCard';
+import { FileCard } from '@/components/shared/FileCard';
+import { FolderIcon } from '@/components/shared/icons';
+import { EditFolderButton } from '@/components/business/EditFolderButton';
+import { DeleteFolderButton } from '@/components/business/DeleteFolderButton';
+import { EditFileButton } from '@/components/business/EditFileButton';
+import { DeleteFileButton } from '@/components/business/DeleteFileButton';
+import type { FolderSummary, FileNode } from '@/lib/data-client';
 
 export function FoldersClient({ folders, files }: { folders: FolderSummary[], files: FileNode[] }) {
   const [editingFolderId, setEditingFolderId] = useState<string | null>(null);
   const [deletingFolderId, setDeletingFolderId] = useState<string | null>(null);
+  const [editingFileId, setEditingFileId] = useState<string | null>(null);
+  const [deletingFileId, setDeletingFileId] = useState<string | null>(null);
 
   const totalItems = folders.length + files.length;
 
-  // Calculate file size for files (simulated)
-  const getFileSize = (fileName: string) => {
-    // Simulate file size based on name length
-    const sizeInBytes = fileName.length * 1024;
-    const formatSize = (bytes: number): string => {
-      if (bytes === 0) return '0 B';
-      const k = 1024;
-      const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-      const i = Math.floor(Math.log(bytes) / Math.log(k));
-      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-    };
-    return formatSize(sizeInBytes);
+  // Calculate file size
+  const getFileSize = (fileName: string): number => {
+    return fileName.length * 1024; // Mock size calculation
+  };
+
+  const formatSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
   return (
@@ -71,15 +67,9 @@ export function FoldersClient({ folders, files }: { folders: FolderSummary[], fi
               id={f.id}
               name={f.name}
               kind={f.kind}
-              size={getFileSize(f.name)}
-              onEdit={() => {
-                // TODO: Implement file editing
-                console.log('Edit file:', f.name);
-              }}
-              onDelete={() => {
-                // TODO: Implement file deletion
-                console.log('Delete file:', f.name);
-              }}
+              size={formatSize(getFileSize(f.name))}
+              onEdit={() => setEditingFileId(f.id)}
+              onDelete={() => setDeletingFileId(f.id)}
               isLastItem={index === files.length - 1}
             />
           ))}
@@ -96,11 +86,25 @@ export function FoldersClient({ folders, files }: { folders: FolderSummary[], fi
       {deletingFolderId && (
         <DeleteFolderButton
           folderId={deletingFolderId}
-          folderName={
-            folders.find((x) => x.id === deletingFolderId)?.name || ""
-          }
+          folderName={folders.find(f => f.id === deletingFolderId)?.name || ''}
           open={!!deletingFolderId}
           onOpenChange={(open) => !open && setDeletingFolderId(null)}
+        />
+      )}
+      {editingFileId && (
+        <EditFileButton
+          fileId={editingFileId}
+          fileName={files.find(f => f.id === editingFileId)?.name || ''}
+          open={!!editingFileId}
+          onOpenChange={(open) => !open && setEditingFileId(null)}
+        />
+      )}
+      {deletingFileId && (
+        <DeleteFileButton
+          fileId={deletingFileId}
+          fileName={files.find(f => f.id === deletingFileId)?.name || ''}
+          open={!!deletingFileId}
+          onOpenChange={(open) => !open && setDeletingFileId(null)}
         />
       )}
     </div>
