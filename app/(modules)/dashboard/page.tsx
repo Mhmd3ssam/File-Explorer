@@ -10,7 +10,7 @@ import { DeleteFileButton } from '@/components/business/DeleteFileButton';
 import type { FileNode } from '@/lib/data-client';
 
 export default function DashboardPage() {
-  const [allFiles, setAllFiles] = useState<FileNode[]>([]);
+  const [allFiles, setAllFiles] = useState<(FileNode & { parentFolder?: { id: string, name: string } })[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
   const [showActionsMenu, setShowActionsMenu] = useState<string | null>(null);
   const [editingFileId, setEditingFileId] = useState<string | null>(null);
@@ -196,7 +196,7 @@ export default function DashboardPage() {
   };
 
   // Create table rows without actions column
-  const tableRows: TableRow[] = currentFiles.map((file) => {
+      const tableRows: TableRow[] = currentFiles.map((file) => {
     return {
       id: file.id,
       cells: [
@@ -205,6 +205,17 @@ export default function DashboardPage() {
           {getFileIcon(file.kind)}
           {formatFileName(file.name)}
         </div>,
+        // Folder name with link
+        file.parentFolder ? (
+          <a 
+            href={`/folders/folder/${file.parentFolder.id}`}
+            className="text-blue-600 hover:text-blue-800 hover:underline"
+          >
+            {file.parentFolder.name}
+          </a>
+        ) : (
+          <span className="text-gray-500">Root</span>
+        ),
         // File size
         getFileSize(file.name),
         // Upload date
@@ -213,9 +224,7 @@ export default function DashboardPage() {
         formatDate(file.lastUpdated),
       ]
     };
-  });
-
-  if (loading) {
+  });  if (loading) {
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -352,7 +361,7 @@ export default function DashboardPage() {
         ) : (
           <>
             <Table
-              headers={['Name', 'Size', 'Upload Date', 'Last Updated']}
+              headers={['Name', 'Folder', 'Size', 'Upload Date', 'Last Updated']}
               rows={tableRows}
               tableLabel="All files in the system"
             />

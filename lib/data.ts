@@ -107,14 +107,17 @@ export function findFile(id: string, current: FolderNode = root): (FileNode & { 
   return null;
 }
 
-// Get all files from the entire system (root + all subfolders)
-export function getAllFiles(current: FolderNode = root): FileNode[] {
-  const files: FileNode[] = [];
+// Get all files from the entire system (root + all subfolders) with parent folder info
+export function getAllFiles(current: FolderNode = root): (FileNode & { parentFolder?: { id: string, name: string } })[] {
+  const files: (FileNode & { parentFolder?: { id: string, name: string } })[] = [];
   
   function traverse(node: FolderNode) {
     for (const child of node.children) {
       if (child.type === 'file') {
-        files.push(child);
+        files.push({
+          ...child,
+          parentFolder: node.id === 'root' ? undefined : { id: node.id, name: node.name }
+        });
       } else if (child.type === 'folder') {
         traverse(child);
       }
