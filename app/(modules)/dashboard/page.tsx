@@ -2,6 +2,10 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Table, type TableRow } from '@/components/shared/Table';
+import { ImageViewer } from '@/components/shared/ImageViewer';
+import { VideoViewer } from '@/components/shared/VideoViewer';
+import { AudioViewer } from '@/components/shared/AudioViewer';
+import { DocumentViewer } from '@/components/shared/DocumentViewer';
 import { DocIcon, ImageIcon, VideoIcon, AudioIcon, FileIcon } from '@/components/shared/icons';
 import { PieChart } from '@/components/shared/PieChart';
 import { AnimatedEmptyState } from '@/components/shared/AnimatedEmptyState';
@@ -201,10 +205,27 @@ export default function DashboardPage() {
       id: file.id,
       cells: [
         // File name with icon
-        <div className="flex items-center gap-2">
-          {getFileIcon(file.kind)}
-          {formatFileName(file.name)}
-        </div>,
+        (() => {
+          const cellContent = (
+            <div className="flex items-center gap-2">
+              {getFileIcon(file.kind)}
+              {formatFileName(file.name)}
+            </div>
+          );
+
+          switch (file.kind) {
+            case 'image':
+              return <ImageViewer name={file.name} trigger={cellContent} />;
+            case 'video':
+              return <VideoViewer name={file.name} trigger={cellContent} />;
+            case 'audio':
+              return <AudioViewer name={file.name} trigger={cellContent} />;
+            case 'document':
+              return <DocumentViewer name={file.name} trigger={cellContent} />;
+            default:
+              return cellContent;
+          }
+        })(),
         // Folder name with link
         file.parentFolder ? (
           <a 
@@ -255,24 +276,34 @@ export default function DashboardPage() {
           ) : (
             <div className="flex items-center justify-center">
               <div className="grid grid-cols-3 gap-4 w-full max-w-md">
-                {lastModifiedFiles.map((file) => (
-                  <div key={file.id} className="bg-white rounded-lg p-4 hover:bg-gray-50 transition-colors border border-gray-200">
-                    {/* Small file icon with gray background */}
-                    <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-3">
-                      {getFileIcon(file.kind, 20)}
+                {lastModifiedFiles.map((file) => {
+                  const cardContent = (
+                    <div className="bg-white rounded-lg p-4 hover:bg-gray-50 transition-colors border border-gray-200">
+                      <div className="w-10 h-10 bg-gray-200 rounded-lg flex items-center justify-center mx-auto mb-3">
+                        {getFileIcon(file.kind, 20)}
+                      </div>
+                      <h3 className="font-medium text-gray-900 text-sm text-center mb-2 truncate" title={file.name}>
+                        {file.name}
+                      </h3>
+                      <p className="text-xs text-gray-500 text-center">
+                        {formatDate(file.lastUpdated)}
+                      </p>
                     </div>
-                    
-                    {/* File name */}
-                    <h3 className="font-medium text-gray-900 text-sm text-center mb-2 truncate" title={file.name}>
-                      {file.name}
-                    </h3>
-                    
-                    {/* Last updated date */}
-                    <p className="text-xs text-gray-500 text-center">
-                      {formatDate(file.lastUpdated)}
-                    </p>
-                  </div>
-                ))}
+                  );
+
+                  switch (file.kind) {
+                    case 'image':
+                      return <ImageViewer key={file.id} name={file.name} trigger={cardContent} />;
+                    case 'video':
+                      return <VideoViewer key={file.id} name={file.name} trigger={cardContent} />;
+                    case 'audio':
+                      return <AudioViewer key={file.id} name={file.name} trigger={cardContent} />;
+                    case 'document':
+                      return <DocumentViewer key={file.id} name={file.name} trigger={cardContent} />;
+                    default:
+                      return <div key={file.id}>{cardContent}</div>;
+                  }
+                })}
               </div>
             </div>
           )}

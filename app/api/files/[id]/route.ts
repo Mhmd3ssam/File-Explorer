@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { revalidatePath } from 'next/cache';
 import { findFolder, findFile, renameFile, deleteFile, saveData } from '@/lib/data';
 import { randomUUID } from 'crypto';
-import { writeFile, mkdir, unlink } from 'fs/promises';
+import { writeFile, mkdir, unlink, rename } from 'fs/promises';
+import { existsSync } from 'fs';
 import { join, basename } from 'path';
 
 export const runtime = 'nodejs';
@@ -141,19 +142,48 @@ export async function PATCH(
     return NextResponse.json({ success: true });
   }
 
-  // Rename the file in the data structure
-  const success = renameFile(params.id, trimmed);
-  if (!success) {
+  try {
+    // Rename the physical file
+    const publicDir = join(process.cwd(), 'public');
+    const oldPath = join(publicDir, file.name);
+    const newPath = join(publicDir, trimmed);
+    
+    // If new name file already exists, return error
+    if (existsSync(newPath)) {
+      return NextResponse.json({ error: 'A file with this name already exists' }, { status: 400 });
+    }
+
+    // Rename physical file
+    await rename(oldPath, newPath);
+
+    // Rename the file in the data structure
+    const success = renameFile(params.id, trimmed);
+    if (!success) {
+      // If data structure update fails, try to revert physical rename
+      try {
+        await rename(newPath, oldPath);
+      } catch (err) {
+        console.error('Failed to revert physical file rename:', err);
+      }
+      return NextResponse.json({ error: 'Failed to rename file' }, { status: 500 });
+    }
+
+    // Save the updated structure to disk
+    saveData();
+  } catch (error) {
+    console.error('Failed to rename file:', error);
     return NextResponse.json({ error: 'Failed to rename file' }, { status: 500 });
   }
-
-  // Save the updated structure to disk
-  saveData();
 
   // Revalidate paths
   revalidatePath('/dashboard');
   revalidatePath('/folders');
   revalidatePath(`/folders/folder/${file.parentId}`);
+  // Also revalidate file type specific pages
+  revalidatePath('/images');
+  revalidatePath('/videos');
+  revalidatePath('/audios');
+  revalidatePath('/documents');
 
   return NextResponse.json({ success: true });
 }

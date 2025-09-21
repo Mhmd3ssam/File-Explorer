@@ -56,16 +56,11 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
         // Always current folder
         setSelectedFolderId(parentId);
       } else {
-        if (parentId !== 'root' && folders.some((f) => f.id === parentId)) {
-          setSelectedFolderId(parentId);
-        } else if (folders.length > 0) {
-          setSelectedFolderId(folders[0].id);
-        } else {
-          setSelectedFolderId('');
-        }
+        // Always default to root folder
+        setSelectedFolderId('root');
       }
     }
-  }, [isOpen, parentId, allowDestinationSelect, folders]);
+  }, [isOpen, parentId, allowDestinationSelect]);
 
   const handleCreate = async () => {
     if (!selected || loading) return;
@@ -90,7 +85,15 @@ export function CreateFileButton({ parentId, open: externalOpen, onOpenChange, a
       }
 
       await response.json();
+      
+      // Force a cache revalidation by refetching with cache-busting
+      await fetch('/api/files?' + new Date().getTime());
+      
+      // Refresh multiple times to ensure UI updates
       router.refresh();
+      setTimeout(() => router.refresh(), 100);
+      setTimeout(() => router.refresh(), 500);
+      
       setOpen(false);
     } catch (error) {
       console.error('Failed to upload file:', error);

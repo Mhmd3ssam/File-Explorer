@@ -149,6 +149,7 @@ export function Navbar() {
           parentId="root"
           open={showFileModal}
           onOpenChange={setShowFileModal}
+          allowDestinationSelect={false}
         />
       )}
     </>

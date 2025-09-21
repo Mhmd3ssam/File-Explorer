@@ -1,7 +1,6 @@
-import { findFolder, getFolderStats } from '@/lib/data';
+import { findFolder, getFolderStats, formatSize } from '@/lib/data';
 import { FoldersClient } from '@/components/business/FoldersClient';
 import type { FileNode, FolderSummary } from '@/lib/data-client';
-import { formatSize } from '@/lib/data-client';
 
 export default function FoldersPage() {
   const root = findFolder('root');
